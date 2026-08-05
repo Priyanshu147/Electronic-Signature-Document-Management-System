@@ -1,82 +1,97 @@
 import { NextFunction, Response } from "express";
 
 import APIError from "../errors/APIError.js";
-import { AuthRequest } from "./authenticate.js";
-import { ERROR_MESSAGES } from "../utils/constants.js";
 
-// Check if user is logged in
-export const auth = async (
+import { AuthRequest } from "./authenticate.js";
+
+import {
+  ERROR_MESSAGES,
+  HTTP_STATUS,
+  USER_ROLE,
+} from "../utils/constants.js";
+
+/* ===========================================================
+   Check Authentication
+=========================================================== */
+
+export function auth(
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): void {
   if (!req.user) {
     return next(
       new APIError(
         ERROR_MESSAGES.UNAUTHORIZED,
-        401,
+        HTTP_STATUS.UNAUTHORIZED,
         "USER_NOT_AUTHENTICATED"
       )
     );
   }
 
   next();
-};
+}
 
-// Allow only Admin
-export const adminOnly = async (
+/* ===========================================================
+   Admin Only
+=========================================================== */
+
+export function adminOnly(
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): void {
   if (!req.user) {
     return next(
       new APIError(
         ERROR_MESSAGES.UNAUTHORIZED,
-        401,
+        HTTP_STATUS.UNAUTHORIZED,
         "USER_NOT_AUTHENTICATED"
       )
     );
   }
 
-  if (req.user.role !== "admin") {
+  if (req.user.role !== USER_ROLE.ADMIN) {
     return next(
       new APIError(
         ERROR_MESSAGES.FORBIDDEN,
-        403,
+        HTTP_STATUS.FORBIDDEN,
         "ADMIN_ACCESS_REQUIRED"
       )
     );
   }
 
   next();
-};
+}
 
-// Allow only User
-export const userOnly = async (
+/* ===========================================================
+   User Only
+=========================================================== */
+
+export function userOnly(
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): void {
   if (!req.user) {
     return next(
       new APIError(
         ERROR_MESSAGES.UNAUTHORIZED,
-        401,
+        HTTP_STATUS.UNAUTHORIZED,
         "USER_NOT_AUTHENTICATED"
       )
     );
   }
 
-  if (req.user.role !== "user") {
+  if (req.user.role !== USER_ROLE.USER) {
     return next(
       new APIError(
         ERROR_MESSAGES.FORBIDDEN,
-        403,
+        HTTP_STATUS.FORBIDDEN,
         "USER_ACCESS_REQUIRED"
       )
     );
   }
 
   next();
-};
+}

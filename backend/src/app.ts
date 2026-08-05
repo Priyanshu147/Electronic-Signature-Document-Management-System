@@ -2,57 +2,119 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-const cookieParser = require("cookie-parser") as any;
+import cookieParser from "cookie-parser";
 import path from "path";
 
 import { BASE_ROUTE } from "./utils/constants.js";
 
 import adminRouter from "./routes/admin.routes.js";
+//import userRouter from "./routes/user.routes.js";
+// import documentRouter from "./routes/document.routes.js";
 
-import { auth } from "./middlewares/auth.middleware.js";
 import { catchError } from "./middlewares/catchError.js";
 
 const app = express();
 
-// Security
+/* ===========================================================
+   Security
+=========================================================== */
+
 app.use(helmet());
 
-// Logging
+/* ===========================================================
+   Logger
+=========================================================== */
+
 app.use(morgan("dev"));
 
-// Parse Request Body
+/* ===========================================================
+   Body Parser
+=========================================================== */
+
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Cookies
-app.use(cookieParser());
-
-// CORS
 app.use(
-  cors({
-    origin: true,
-    credentials: true,
+  express.urlencoded({
+    extended: true,
   })
 );
 
-// Static Files
+/* ===========================================================
+   Cookie Parser
+=========================================================== */
+
+app.use(cookieParser());
+
+/* ===========================================================
+   CORS
+=========================================================== */
+
 app.use(
-  BASE_ROUTE.UPLOADS,
-  express.static(path.join(process.cwd(), "uploads"))
+  cors({
+    origin: true, // Allow every origin during development
+    credentials: true, // Allow cookies
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
+  })
 );
 
-// Public Routes
-// Public Routes
+/* ===========================================================
+   Static Files
+=========================================================== */
+
+app.use(
+  BASE_ROUTE.UPLOADS,
+  express.static(
+    path.join(process.cwd(), "uploads")
+  )
+);
+
+/* ===========================================================
+   API Routes
+=========================================================== */
+
 app.use(BASE_ROUTE.ADMIN, adminRouter);
-app.use(BASE_ROUTE.USER, userRouter);
 
-// Protected Routes
-app.use(auth);
+//app.use(BASE_ROUTE.USER, userRouter);
 
-app.use(BASE_ROUTE.USER, userRouter);
-app.use(BASE_ROUTE.DOCUMENT, documentRouter);
+// app.use(BASE_ROUTE.DOCUMENT, documentRouter);
 
-// Global Error Handler
+/* ===========================================================
+   Health Check
+=========================================================== */
+
+app.get("/health", (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Electronic Signature Document Management System API is running.",
+  });
+});
+
+/* ===========================================================
+   404 Handler
+=========================================================== */
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Cannot ${req.method} ${req.originalUrl}`,
+  });
+});
+
+/* ===========================================================
+   Global Error Handler
+=========================================================== */
+
 app.use(catchError);
 
 export default app;

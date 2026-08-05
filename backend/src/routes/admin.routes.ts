@@ -1,13 +1,13 @@
 import { Router } from "express";
 
-import AdminController from "../controller/admin.controller.js";
+import AdminController from "../controllers/admin.controller.js";
 
 import catchAsync from "../middlewares/catchAsync.js";
 import authenticate from "../middlewares/authenticate.js";
 import { adminOnly } from "../middlewares/general.js";
 import validateSchema from "../middlewares/validateSchema.js";
 
-import AdminValidationSchemas from "../schema/admin.schema.js";
+import AdminValidationSchemas from "../schemas/admin.schema.js";
 
 import { ADMIN_ROUTES } from "../utils/constants.js";
 

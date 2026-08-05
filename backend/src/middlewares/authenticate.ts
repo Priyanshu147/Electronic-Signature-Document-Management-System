@@ -1,45 +1,106 @@
+// src/middlewares/authenticate.ts
+
 import { NextFunction, Request, Response } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
 
 import APIError from "../errors/APIError.js";
-import { ERROR_MESSAGES } from "../utils/constants.js";
 
-export interface AuthRequest extends Request {
-  user?: JwtPayload;
+import {
+  ERROR_MESSAGES,
+  HTTP_STATUS,
+  TOKEN_NAMES,
+} from "../utils/constants.js";
+
+import {
+  getAccessToken,
+  setAccessTokenCookie,
+  verifyAccessToken,
+  verifyRefreshToken,
+} from "../utils/helper.js";
+
+export interface AuthUser {
+  id: number;
+  role: string;
 }
 
-const authenticate = async (
+export interface AuthRequest extends Request {
+  user?: AuthUser;
+}
+
+const authenticate = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): void => {
   try {
-    const authHeader = req.headers.authorization;
+    const accessToken =
+      req.cookies[TOKEN_NAMES.ACCESS_TOKEN];
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new APIError(
-        ERROR_MESSAGES.UNAUTHORIZED,
-        401,
-        "JWT_MISSING"
+    const refreshToken =
+      req.cookies[TOKEN_NAMES.REFRESH_TOKEN];
+
+    // Refresh token is mandatory
+    if (!refreshToken) {
+      return next(
+        new APIError(
+          ERROR_MESSAGES.UNAUTHORIZED,
+          HTTP_STATUS.UNAUTHORIZED,
+          "REFRESH_TOKEN_MISSING"
+        )
       );
     }
 
-    const token = authHeader.split(" ")[1];
+    // -------------------------------------------------------
+    // Try Access Token
+    // -------------------------------------------------------
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET!
-    ) as JwtPayload;
+    if (accessToken) {
+      try {
+        const decoded =
+          verifyAccessToken(accessToken) as AuthUser;
 
-    req.user = decoded;
+        req.user = decoded;
 
-    next();
-  } catch (error) {
-    next(
+        return next();
+      } catch (error: any) {
+        // Ignore only expired access token
+        if (error.name !== "TokenExpiredError") {
+          return next(
+            new APIError(
+              ERROR_MESSAGES.UNAUTHORIZED,
+              HTTP_STATUS.UNAUTHORIZED,
+              error.message
+            )
+          );
+        }
+      }
+    }
+
+    // -------------------------------------------------------
+    // Access Token Expired
+    // Verify Refresh Token
+    // -------------------------------------------------------
+
+    const decodedRefresh =
+      verifyRefreshToken(refreshToken) as AuthUser;
+
+    // Create New Access Token
+    const newAccessToken = getAccessToken(
+      decodedRefresh.id,
+      decodedRefresh.role
+    );
+
+    // Update Cookie
+    setAccessTokenCookie(res, newAccessToken);
+
+    req.user = decodedRefresh;
+
+    return next();
+  } catch (error: any) {
+    return next(
       new APIError(
         ERROR_MESSAGES.UNAUTHORIZED,
-        401,
-        error
+        HTTP_STATUS.UNAUTHORIZED,
+        error.message
       )
     );
   }

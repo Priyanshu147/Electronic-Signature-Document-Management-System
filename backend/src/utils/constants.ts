@@ -1,8 +1,23 @@
+// src/utils/constants.ts
+
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// Database
+
+/* ===========================================================
+    USER ROLES
+=========================================================== */
+
+export const USER_ROLE = {
+    ADMIN: "admin",
+    USER: "user",
+} as const;
+
+/* ===========================================================
+   DATABASE
+=========================================================== */
+
 export const DB_CONFIG = {
     host: process.env.DB_HOST!,
     user: process.env.DB_USER!,
@@ -10,124 +25,237 @@ export const DB_CONFIG = {
     database: process.env.DB_NAME!,
 };
 
-// Base Routes
+/* ===========================================================
+   BASE ROUTES
+=========================================================== */
+
 export const BASE_ROUTE = {
+    AUTH: "/auth",
     ADMIN: "/admin",
     USER: "/user",
     DOCUMENT: "/document",
     UPLOADS: "/uploads",
 };
 
-// API Routes
+/* ===========================================================
+   AUTH ROUTES
+=========================================================== */
 
+export const AUTH_ROUTES = {
+    ADMIN_LOGIN: "/admin/login",
+    USER_LOGIN: "/user/login",
+    LOGOUT: "/logout",
+    REFRESH_TOKEN: "/refresh-token",
+};
+
+/* ===========================================================
+   ADMIN ROUTES
+=========================================================== */
 
 export const ADMIN_ROUTES = {
-  LOGIN: "/login",
-  LOGOUT: "/logout",
 
-  PROFILE: "/profile",
-  DASHBOARD: "/dashboard",
+    LOGIN: "/login",
+    LOGOUT: "/logout",
 
-  CREATE_USER: "/users",
-  GET_USERS: "/users",
-  GET_USER: "/users/:id",
-  UPDATE_USER: "/users/:id",
-  DELETE_USER: "/users/:id",
+    DASHBOARD: "/dashboard",
+    PROFILE: "/profile",
+
+    CREATE_USER: "/users",
+    GET_USERS: "/users",
+    GET_USER: "/users/:id",
+    UPDATE_USER: "/users/:id",
+    DELETE_USER: "/users/:id",
 };
+
+/* ===========================================================
+   USER ROUTES
+=========================================================== */
 
 export const USER_ROUTES = {
-    LOGIN: "/login",
-    CREATE: "/",
-    GET_ALL: "/",
-    GET_BY_ID: "/:id",
-    UPDATE: "/:id",
-    DELETE: "/:id",
+    PROFILE: "/profile",
+
+    GET_DOCUMENTS: "/documents",
+
+    GET_DOCUMENT: "/documents/:id",
 };
+
+/* ===========================================================
+   DOCUMENT ROUTES
+=========================================================== */
 
 export const DOCUMENT_ROUTES = {
     UPLOAD: "/upload",
+
     GET_ALL: "/",
+
     GET_BY_ID: "/:id",
+
     UPDATE: "/:id",
+
     DELETE: "/:id",
+
     DOWNLOAD: "/download/:id",
+
+    SAVE_SIGNATURE_FIELDS: "/:id/signature-fields",
+
+    GET_SIGNATURE_FIELDS: "/:id/signature-fields",
 };
 
+/* ===========================================================
+   DATABASE TABLES
+=========================================================== */
 
-// Table Names
 export const TABLES = {
     ADMIN: "admin",
     USER: "users",
     DOCUMENT: "documents",
+    SIGNATURE_FIELD: "signature_fields",
 };
 
+/* ===========================================================
+   JWT
+=========================================================== */
 
-// JWT
 export const TOKEN_NAMES = {
     ACCESS_TOKEN: "accessToken",
+    REFRESH_TOKEN: "refreshToken",
 };
 
-export const ACCESS_TOKEN_EXPIRY = "1d";
+export const ACCESS_TOKEN_EXPIRY = "15m";
 
-// Upload
+export const REFRESH_TOKEN_EXPIRY = "7d";
+
+/* ===========================================================
+   UPLOAD CONFIG
+=========================================================== */
+
 export const FILE_UPLOAD = {
     PATH: "uploads/",
-    MAX_SIZE: 20 * 1024 * 1024, //20MB
+
+    MAX_SIZE: 20 * 1024 * 1024,
+
+    ALLOWED_TYPES: [
+        "application/pdf",
+    ],
 };
 
-// Messages
-export const ERROR_MESSAGES = {
-    UNAUTHORIZED: "Unauthorized Access",
-    FORBIDDEN: "Access Forbidden",
-    API_KEY_REQUIRED: "Unauthorized: Api key Required",
-    INVALID_API_KEY: "Access Forbidden: Invalid Api key",
-    NOT_FOUND: "Resource Not Found",
-    CONNECTION_ERROR: "Connection Error: Unable to connect to the database",
-    AUTHENTICATION_FAILED: "Authentication Failed: Invalid credentials",
-    SERVER_ERROR: "Server Error: An unexpected error occurred on the server",
-    DATABASE_ERROR:
-        "Database Error: An error occurred with the database operation",
-    INSUFFICIENT_PRIVILEGES:
-        "Insufficient Privileges: You do not have the necessary permissions",
-    RESOURCE_NOT_FOUND:
-        "Resource Not Found: The requested resource does not exist or may have been deleted.",
-    OPERATION_FAILED:
-        "Operation Failed: The requested operation could not be completed",
-    BAD_REQUEST:
-        "Bad Request: The request could not be understood or was missing required parameters",
-    INTERNAL_SERVER_ERROR:
-        "Internal Server Error: An unexpected error occurred on the server",
-    DUPLICATE_RECORD: "Record already exists for {key}",
-    INVALID_DETAILS: "Invalid login details Or User is not active",
-    INVALID_PASSWORD: "Invalid password",
-    TOKEN_EXPIRED: "Token Expired",
-    LINKEDIN_USER_NOT_FOUND: "Error fetching LinkedIn user info {profile}",
-    LINKEDIN_POST_FAILD: "Faild to post Description on LinkedIn",
-    RESET_TOKEN_EXPIRE: "Token has been expired please try again.",
-    ON_PASSWORD_CONFLICT: "Password is not matching with confirm password.",
-};
+/* ===========================================================
+   PAGINATION
+=========================================================== */
 
+export const DEFAULT_PAGE_SIZE = 10;
 
-export const SUCCESS_MESSAGES = {
-    LOGIN: "Login successful.",
-    USER_CREATED: "User created successfully.",
-    DOCUMENT_UPLOADED: "Document uploaded successfully.",
-};
+export const MAX_PAGE_SIZE = 100;
 
-// Status
+/* ===========================================================
+   USER STATUS
+=========================================================== */
+
 export const USER_STATUS = {
     ACTIVE: "Active",
     INACTIVE: "Inactive",
-};
+} as const;
+
+/* ===========================================================
+   DOCUMENT STATUS
+=========================================================== */
 
 export const DOCUMENT_STATUS = {
     DRAFT: "Draft",
     IN_PROGRESS: "In Progress",
     COMPLETED: "Completed",
     ARCHIVED: "Archived",
+} as const;
+
+/* ===========================================================
+   FUTURE DOCUMENT PERMISSIONS
+=========================================================== */
+
+export const DOCUMENT_PERMISSION = {
+    VIEW: "VIEW",
+    EDIT: "EDIT",
+} as const;
+
+/* ===========================================================
+   HTTP STATUS
+=========================================================== */
+
+export const HTTP_STATUS = {
+    OK: 200,
+
+    CREATED: 201,
+
+    BAD_REQUEST: 400,
+
+    UNAUTHORIZED: 401,
+
+    FORBIDDEN: 403,
+
+    NOT_FOUND: 404,
+
+    CONFLICT: 409,
+
+    UNPROCESSABLE_ENTITY: 422,
+
+    INTERNAL_SERVER_ERROR: 500,
 };
 
+/* ===========================================================
+   ERROR MESSAGES
+=========================================================== */
 
+export const ERROR_MESSAGES = {
+    UNAUTHORIZED: "Unauthorized access.",
 
+    FORBIDDEN: "Access forbidden.",
 
-export const DEFAULT_PAGE_SIZE = 10;
+    INVALID_CREDENTIALS: "Invalid email or password.",
+
+    INVALID_PASSWORD: "Invalid password.",
+
+    USER_NOT_FOUND: "User not found.",
+
+    ADMIN_NOT_FOUND: "Admin not found.",
+
+    DOCUMENT_NOT_FOUND: "Document not found.",
+
+    DUPLICATE_EMAIL: "Email already exists.",
+
+    FILE_REQUIRED: "Please upload a PDF document.",
+
+    INVALID_FILE_TYPE: "Only PDF files are allowed.",
+
+    FILE_TOO_LARGE: "File size exceeds the allowed limit.",
+
+    DATABASE_ERROR: "Database operation failed.",
+
+    TOKEN_EXPIRED: "Token expired.",
+
+    INVALID_TOKEN: "Invalid token.",
+
+    INTERNAL_SERVER_ERROR: "Internal server error.",
+};
+
+/* ===========================================================
+   SUCCESS MESSAGES
+=========================================================== */
+
+export const SUCCESS_MESSAGES = {
+    LOGIN: "Login successful.",
+
+    LOGOUT: "Logout successful.",
+
+    USER_CREATED: "User created successfully.",
+
+    USER_UPDATED: "User updated successfully.",
+
+    USER_DELETED: "User deleted successfully.",
+
+    DOCUMENT_UPLOADED: "Document uploaded successfully.",
+
+    DOCUMENT_UPDATED: "Document updated successfully.",
+
+    DOCUMENT_DELETED: "Document deleted successfully.",
+
+    SIGNATURE_SAVED: "Signature fields saved successfully.",
+};
