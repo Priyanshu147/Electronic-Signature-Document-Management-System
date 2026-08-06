@@ -35,6 +35,7 @@ export const BASE_ROUTE = {
     USER: "/user",
     DOCUMENT: "/document",
     UPLOADS: "/uploads",
+    SIGNER_ROLE: "/signer-role",
 };
 
 /* ===========================================================
@@ -114,6 +115,18 @@ export const DOCUMENT_ROUTES = {
 };
 
 /* ===========================================================
+   SIGNER ROLE ROUTES
+=========================================================== */
+
+export const SIGNER_ROLE_ROUTES = {
+    CREATE: "/signer-roles",
+    GET_ALL: "/signer-roles",
+    GET_BY_ID: "/signer-roles/:id",
+    UPDATE: "/signer-roles/:id",
+    DELETE: "/signer-roles/:id",
+};
+
+/* ===========================================================
    DATABASE TABLES
 =========================================================== */
 
@@ -122,6 +135,8 @@ export const TABLES = {
     USER: "users",
     DOCUMENT: "documents",
     SIGNATURE_FIELD: "signature_fields",
+    SIGNER_ROLE:"signer_roles",
+    DOCUMENT_SIGNER_FIELDS: "document_signer_fields",
 };
 
 /* ===========================================================
@@ -246,6 +261,8 @@ export const ERROR_MESSAGES = {
     INVALID_TOKEN: "Invalid token.",
 
     INTERNAL_SERVER_ERROR: "Internal server error.",
+
+    RESOURCE_NOT_FOUND: "Resource not found.",
 };
 
 /* ===========================================================

@@ -10,6 +10,7 @@ import { BASE_ROUTE } from "./utils/constants.js";
 import adminRouter from "./routes/admin.routes.js";
 import userRouter from "./routes/user.routes.js";
 // import documentRouter from "./routes/document.routes.js";
+import signerRoleRouter from "./routes/signerRole.routes.js";
 
 import { catchError } from "./middlewares/catchError.js";
 
@@ -86,6 +87,8 @@ app.use(
 app.use(BASE_ROUTE.ADMIN, adminRouter);
 
 app.use(BASE_ROUTE.USER, userRouter);
+
+app.use(BASE_ROUTE.SIGNER_ROLE, signerRoleRouter);
 
 // app.use(BASE_ROUTE.DOCUMENT, documentRouter);
 
