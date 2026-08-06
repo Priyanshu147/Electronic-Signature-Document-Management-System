@@ -105,7 +105,7 @@ export const DOCUMENT_ROUTES = {
 
     UPDATE: "/:id",
 
-    DELETE: "/:id",
+    DELETE: "/document/:id",
 
     DOWNLOAD: "/download/:id",
 
