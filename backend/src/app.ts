@@ -8,7 +8,7 @@ import path from "path";
 import { BASE_ROUTE } from "./utils/constants.js";
 
 import adminRouter from "./routes/admin.routes.js";
-//import userRouter from "./routes/user.routes.js";
+import userRouter from "./routes/user.routes.js";
 // import documentRouter from "./routes/document.routes.js";
 
 import { catchError } from "./middlewares/catchError.js";
@@ -85,7 +85,7 @@ app.use(
 
 app.use(BASE_ROUTE.ADMIN, adminRouter);
 
-//app.use(BASE_ROUTE.USER, userRouter);
+app.use(BASE_ROUTE.USER, userRouter);
 
 // app.use(BASE_ROUTE.DOCUMENT, documentRouter);
 

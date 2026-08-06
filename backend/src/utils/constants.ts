@@ -72,11 +72,23 @@ export const ADMIN_ROUTES = {
 =========================================================== */
 
 export const USER_ROUTES = {
+    LOGIN: "/login",
+    LOGOUT: "/logout",
+
+    DASHBOARD: "/dashboard",
+
+    DOCUMENTS: "/documents",
+
+    UPLOAD_DOCUMENT: "/documents/upload",
+
+
     PROFILE: "/profile",
 
     GET_DOCUMENTS: "/documents",
 
     GET_DOCUMENT: "/documents/:id",
+    UPDATE_DOCUMENT: "/documents/:id",
+    DELETE_DOCUMENT: "/documents/:id",
 };
 
 /* ===========================================================
