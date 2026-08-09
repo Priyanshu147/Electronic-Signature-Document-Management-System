@@ -1,239 +1,344 @@
 import React, { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
-  AppBar,
   Box,
-  CssBaseline,
   Drawer,
+  AppBar,
+  Toolbar,
+  Typography,
   IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Toolbar,
-  Typography,
   Avatar,
   Menu,
   MenuItem,
   Divider,
-  Chip,
+  InputBase,
+  Badge,
+  Breadcrumbs,
+  Link,
+  Tooltip,
 } from "@mui/material";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
+import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
+import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
+import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import MenuIcon from "@mui/icons-material/Menu";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import LogoutIcon from "@mui/icons-material/Logout";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import { useAuth } from "../hooks/useAuth";
+import MenuOpenIcon from "@mui/icons-material/MenuOpen";
+import SearchIcon from "@mui/icons-material/Search";
+import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
+import toast from "react-hot-toast";
 
-const drawerWidth = 260;
+import { useAuth } from "../hooks/useAuth";
+import { adminApi } from "../api/admin.api";
+import { ResetPasswordDialog } from "../components/forms/ResetPasswordDialog";
+
+const EXPANDED_WIDTH = 260;
+const COLLAPSED_WIDTH = 80;
 
 export const AdminLayout: React.FC = () => {
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
   const handleLogout = async () => {
-    handleMenuClose();
+    setAnchorEl(null);
     await logout();
     navigate("/admin/login");
   };
 
-  const navItems = [
-    { text: "Dashboard", icon: <DashboardIcon />, path: "/admin/dashboard" },
-    { text: "Users Management", icon: <PeopleIcon />, path: "/admin/users" },
+  const handleResetPasswordSubmit = async (oldPassword: string, newPassword: string) => {
+    setResetLoading(true);
+    try {
+      await adminApi.resetAdminPassword(oldPassword, newPassword);
+      toast.success("Admin password reset successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reset admin password.");
+      throw err;
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const menuItems = [
+    {
+      text: "Dashboard",
+      icon: <DashboardOutlinedIcon />,
+      path: "/admin/dashboard",
+    },
+    {
+      text: "Users Management",
+      icon: <GroupOutlinedIcon />,
+      path: "/admin/users",
+    },
   ];
 
-  const drawer = (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <Toolbar
+  const drawerWidth = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
+  const pageTitle = location.pathname.includes("users") ? "Users Management" : "Dashboard";
+
+  return (
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#F7F8FA" }}>
+      {/* Sidebar Navigation */}
+      <Drawer
+        variant="permanent"
         sx={{
-          display: "flex",
-          alignItems: "center",
-          px: 3,
-          background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-          color: "white",
+          width: drawerWidth,
+          flexShrink: 0,
+          whiteSpace: "nowrap",
+          boxSizing: "border-box",
+          transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+            bgcolor: "#FFFFFF",
+            borderColor: "#E5E7EB",
+            overflowX: "hidden",
+            transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          },
         }}
       >
-        <AdminPanelSettingsIcon sx={{ mr: 1.5, color: "#38bdf8", fontSize: 28 }} />
-        <Box>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-            Admin Portal
-          </Typography>
-          <Typography variant="caption" sx={{ color: "#94a3b8" }}>
-            E-Signature System
-          </Typography>
+        {/* Brand Container */}
+        <Box
+          sx={{
+            height: 64,
+            display: "flex",
+            alignItems: "center",
+            px: collapsed ? 2.5 : 2.5,
+            gap: 1.5,
+            borderBottom: "1px solid #E5E7EB",
+          }}
+        >
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: "8px",
+              bgcolor: "#1976D2",
+              color: "#FFF",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <VerifiedUserOutlinedIcon sx={{ fontSize: 20 }} />
+          </Box>
+          {!collapsed && (
+            <Box sx={{ overflow: "hidden" }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#1F2937", lineHeight: 1.2 }}>
+                eSign Pro
+              </Typography>
+              <Typography variant="caption" sx={{ color: "#6B7280", letterSpacing: "0.5px" }}>
+                Admin Portal
+              </Typography>
+            </Box>
+          )}
         </Box>
-      </Toolbar>
-      <Divider />
-      <List sx={{ px: 2, py: 2, flexGrow: 1 }}>
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
-              <ListItemButton
-                onClick={() => {
-                  navigate(item.path);
-                  setMobileOpen(false);
-                }}
+
+        {/* Menu Items */}
+        <List sx={{ p: 1.5 }}>
+          {menuItems.map((item) => {
+            const isSelected = location.pathname === item.path;
+            return (
+              <ListItem key={item.path} disablePadding sx={{ display: "block", mb: 0.5 }}>
+                <ListItemButton
+                  onClick={() => navigate(item.path)}
+                  sx={{
+                    minHeight: 44,
+                    borderRadius: "8px",
+                    px: 2,
+                    justifyContent: collapsed ? "center" : "initial",
+                    bgcolor: isSelected ? "#EFF6FF" : "transparent",
+                    color: isSelected ? "#1976D2" : "#4B5563",
+                    position: "relative",
+                    "&:hover": {
+                      bgcolor: isSelected ? "#EFF6FF" : "#F3F4F6",
+                    },
+                    "&::before": isSelected
+                      ? {
+                          content: '""',
+                          position: "absolute",
+                          left: 0,
+                          top: "20%",
+                          height: "60%",
+                          width: "3px",
+                          borderRadius: "0 4px 4px 0",
+                          bgcolor: "#1976D2",
+                        }
+                      : {},
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: collapsed ? "auto" : 2,
+                      justifyContent: "center",
+                      color: isSelected ? "#1976D2" : "#6B7280",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  {!collapsed && (
+                    <ListItemText
+                      primary={item.text}
+                      slotProps={{
+                        primary: {
+                          sx: { fontSize: "0.875rem", fontWeight: isSelected ? 600 : 500 },
+                        },
+                      }}
+                    />
+                  )}
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+        </List>
+      </Drawer>
+
+      {/* Main Layout Area */}
+      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        {/* Top Header Bar */}
+        <AppBar
+          position="sticky"
+          elevation={0}
+          sx={{
+            bgcolor: "#FFFFFF",
+            color: "#1F2937",
+            borderBottom: "1px solid #E5E7EB",
+            height: 64,
+            justifyContent: "center",
+          }}
+        >
+          <Toolbar sx={{ justifyContent: "space-between", px: { xs: 2, md: 3 } }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <IconButton onClick={() => setCollapsed(!collapsed)} edge="start" size="small">
+                {collapsed ? <MenuIcon /> : <MenuOpenIcon />}
+              </IconButton>
+
+              <Breadcrumbs separator="/" sx={{ fontSize: "0.875rem" }}>
+                <Link color="inherit" underline="none" href="#" onClick={(e) => e.preventDefault()}>
+                  Admin
+                </Link>
+                <Typography color="text.primary" sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                  {pageTitle}
+                </Typography>
+              </Breadcrumbs>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              {/* Search Field */}
+              {/* <Box
                 sx={{
-                  borderRadius: 2,
-                  backgroundColor: isActive ? "primary.main" : "transparent",
-                  color: isActive ? "primary.contrastText" : "text.primary",
-                  "&:hover": {
-                    backgroundColor: isActive ? "primary.dark" : "action.hover",
+                  display: { xs: "none", sm: "flex" },
+                  alignItems: "center",
+                  bgcolor: "#F3F4F6",
+                  borderRadius: "8px",
+                  px: 1.5,
+                  py: 0.5,
+                  width: 220,
+                }}
+              >
+                <SearchIcon sx={{ color: "#9CA3AF", fontSize: 20, mr: 1 }} />
+                <InputBase
+                  placeholder="Search admin portal..."
+                  sx={{ fontSize: "0.875rem", width: "100%" }}
+                />
+              </Box> */}
+
+              {/* Notification Icon */}
+              {/* <Tooltip title="Notifications">
+                <IconButton size="small">
+                  <Badge badgeContent={2} color="primary">
+                    <NotificationsNoneOutlinedIcon />
+                  </Badge>
+                </IconButton>
+              </Tooltip> */}
+
+              {/* User Avatar Menu Trigger */}
+              <IconButton
+                onClick={(e) => setAnchorEl(e.currentTarget)}
+                size="small"
+                sx={{ ml: 0.5 }}
+              >
+                <Avatar sx={{ width: 36, height: 36, bgcolor: "#1976D2", fontSize: "0.875rem", fontWeight: 700 }}>
+                  A
+                </Avatar>
+              </IconButton>
+
+              {/* Profile Menu Dropdown */}
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+                transformOrigin={{ horizontal: "right", vertical: "top" }}
+                anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                slotProps={{
+                  paper: {
+                    elevation: 2,
+                    sx: { width: 220, borderRadius: "10px", mt: 1, p: 0.5 },
                   },
                 }}
               >
-                <ListItemIcon
-                  sx={{
-                    color: isActive ? "inherit" : "primary.main",
-                    minWidth: 40,
+                <Box sx={{ px: 2, py: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Administrator
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {user?.email}
+                  </Typography>
+                </Box>
+                <Divider sx={{ my: 0.5 }} />
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
+                    setResetDialogOpen(true);
                   }}
+                  sx={{ borderRadius: "6px", py: 1 }}
                 >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  slotProps={{
-                    primary: { sx: { fontWeight: isActive ? 600 : 500 } },
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
-      </List>
-      <Box sx={{ p: 2, borderTop: "1px solid rgba(0, 0, 0, 0.08)" }}>
-        <Chip
-          icon={<AdminPanelSettingsIcon fontSize="small" />}
-          label="Administrator"
-          color="primary"
-          variant="outlined"
-          size="small"
-          sx={{ width: "100%", justifyContent: "flex-start", px: 1 }}
-        />
-      </Box>
-    </Box>
-  );
+                  <ListItemIcon>
+                    <VpnKeyOutlinedIcon fontSize="small" />
+                  </ListItemIcon>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    Reset Admin Password
+                  </Typography>
+                </MenuItem>
+                <Divider sx={{ my: 0.5 }} />
+                <MenuItem onClick={handleLogout} sx={{ borderRadius: "6px", py: 1, color: "error.main" }}>
+                  <ListItemIcon>
+                    <LogoutOutlinedIcon fontSize="small" color="error" />
+                  </ListItemIcon>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Sign Out
+                  </Typography>
+                </MenuItem>
+              </Menu>
+            </Box>
+          </Toolbar>
+        </AppBar>
 
-  return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f8fafc" }}>
-      <CssBaseline />
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
-          bgcolor: "background.paper",
-          color: "text.primary",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-        }}
-      >
-        <Toolbar sx={{ justifyContent: "space-between" }}>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
-            Electronic Signature DMS
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" }, fontWeight: 500 }}>
-              {user?.email}
-            </Typography>
-            <IconButton onClick={handleMenuOpen} size="small" sx={{ ml: 1 }}>
-              <Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: 16 }}>
-                A
-              </Avatar>
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-              transformOrigin={{ horizontal: "right", vertical: "top" }}
-              anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-              slotProps={{
-                paper: { sx: { width: 200, borderRadius: 2, mt: 1 } },
-              }}
-            >
-              <Box sx={{ px: 2, py: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Admin Account
-                </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {user?.email}
-                </Typography>
-              </Box>
-              <Divider />
-              <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
-                <ListItemIcon sx={{ color: "error.main" }}>
-                  <LogoutIcon fontSize="small" />
-                </ListItemIcon>
-                Logout
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="navigation drawer"
-      >
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
+        {/* Page Content View */}
+        <Box component="main" sx={{ flexGrow: 1, p: { xs: 2.5, md: 3 } }}>
+          <Outlet />
+        </Box>
       </Box>
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mt: 8,
-        }}
-      >
-        <Outlet />
-      </Box>
+
+      {/* Password Reset Modal */}
+      <ResetPasswordDialog
+        open={resetDialogOpen}
+        title="Reset Admin Password"
+        loading={resetLoading}
+        onClose={() => setResetDialogOpen(false)}
+        onSubmit={handleResetPasswordSubmit}
+      />
     </Box>
   );
 };

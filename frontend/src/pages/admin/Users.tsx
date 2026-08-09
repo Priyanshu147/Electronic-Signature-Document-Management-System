@@ -4,34 +4,45 @@ import {
   Box,
   Card,
   CardContent,
+  Typography,
+  Button,
   TextField,
+  MenuItem,
+  Select,
   FormControl,
   InputLabel,
-  Select,
-  MenuItem,
-  IconButton,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer,
+  TablePagination,
   Chip,
-  Tooltip,
+  IconButton,
+  Menu,
+  Avatar,
+  CircularProgress,
   InputAdornment,
+  Tooltip,
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
+import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import toast from "react-hot-toast";
 
 import { adminApi } from "../../api/admin.api";
 import type { CreateUserPayload, UpdateUserPayload, UserItem } from "../../types/user.types";
-import { PageHeader } from "../../components/common/PageHeader";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { formatDate } from "../../utils/formatters";
 import { UserFormModal } from "./UserForm";
 
 export const Users: React.FC = () => {
   const queryClient = useQueryClient();
-  const [page, setPage] = useState<number>(1);
+  const [page, setPage] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(10);
   const [searchText, setSearchText] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -42,11 +53,14 @@ export const Users: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
 
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["users", page, pageSize, searchText, statusFilter],
+  const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null);
+  const [menuUser, setMenuUser] = useState<UserItem | null>(null);
+
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ["users", page + 1, pageSize, searchText, statusFilter],
     queryFn: () =>
       adminApi.getUsers({
-        page,
+        page: page + 1,
         limit: pageSize,
         searchText: searchText || undefined,
         status: statusFilter || undefined,
@@ -133,169 +147,200 @@ export const Users: React.FC = () => {
     }
   };
 
-  const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 70 },
-    {
-      field: "full_name",
-      headerName: "Full Name",
-      flex: 1,
-      minWidth: 160,
-    },
-    {
-      field: "email",
-      headerName: "Email Address",
-      flex: 1.2,
-      minWidth: 200,
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 130,
-      renderCell: (params: GridRenderCellParams) => {
-        const isAct = params.value === "Active";
-        return (
-          <Chip
-            label={String(params.value || "")}
-            color={isAct ? "success" : "default"}
-            size="small"
-            variant="outlined"
-            sx={{ fontWeight: 600 }}
-          />
-        );
-      },
-    },
-    {
-      field: "last_login",
-      headerName: "Last Login",
-      width: 170,
-      valueFormatter: (value: any) => formatDate(value as string),
-    },
-    {
-      field: "created_at",
-      headerName: "Created At",
-      width: 170,
-      valueFormatter: (value: any) => formatDate(value as string),
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 110,
-      sortable: false,
-      filterable: false,
-      renderCell: (params: GridRenderCellParams) => {
-        const userRow = params.row as UserItem;
-        return (
-          <Box sx={{ display: "flex", gap: 0.5 }}>
-            <Tooltip title="Edit User">
-              <IconButton
-                size="small"
-                color="primary"
-                onClick={() => handleOpenEdit(userRow)}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete User">
-              <IconButton
-                size="small"
-                color="error"
-                onClick={() => handleOpenDelete(userRow)}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        );
-      },
-    },
-  ];
-
   return (
     <Box>
-      <PageHeader
-        title="Users Management"
-        subtitle="View, create, edit and delete system users"
-        actionText="Create User"
-        actionIcon={<AddIcon />}
-        onAction={handleOpenCreate}
-      />
+      {/* Top Header */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: "#1F2937" }}>
+            Users Management
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage user accounts, roles, permissions, and password resets
+          </Typography>
+        </Box>
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <Tooltip title="Refresh List">
+            <IconButton onClick={() => refetch()} size="small" sx={{ border: "1px solid #E5E7EB", borderRadius: 2 }}>
+              <RefreshOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<PersonAddOutlinedIcon />}
+            onClick={handleOpenCreate}
+            sx={{ borderRadius: 2 }}
+          >
+            Create New User
+          </Button>
+        </Box>
+      </Box>
 
-      <Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
+      {/* Main Table Card */}
+      <Card elevation={0}>
         <CardContent sx={{ p: 3 }}>
           {/* Filters Bar */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              gap: 2,
-              mb: 3,
-              justifyContent: "space-between",
-            }}
-          >
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2 }}>
             <TextField
-              placeholder="Search by name or email..."
               size="small"
+              placeholder="Search by name or email..."
               value={searchText}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              onChange={(e) => {
                 setSearchText(e.target.value);
-                setPage(1);
+                setPage(0);
               }}
+              sx={{ width: 300 }}
               slotProps={{
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon color="action" />
+                      <SearchIcon sx={{ color: "#9CA3AF" }} />
                     </InputAdornment>
                   ),
                 },
               }}
-              sx={{ minWidth: 280 }}
             />
 
             <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel id="status-filter-label">Filter Status</InputLabel>
+              <InputLabel>Status Filter</InputLabel>
               <Select
-                labelId="status-filter-label"
-                label="Filter Status"
                 value={statusFilter}
+                label="Status Filter"
                 onChange={(e) => {
-                  setStatusFilter(e.target.value as string);
-                  setPage(1);
+                  setStatusFilter(e.target.value);
+                  setPage(0);
                 }}
               >
-                <MenuItem value="">All Statuses</MenuItem>
-                <MenuItem value="Active">Active</MenuItem>
-                <MenuItem value="Inactive">Inactive</MenuItem>
+                <MenuItem value="">All Users</MenuItem>
+                <MenuItem value="Active">Active Users</MenuItem>
+                <MenuItem value="Inactive">Inactive Users</MenuItem>
               </Select>
             </FormControl>
           </Box>
 
-          {/* DataGrid */}
-          <Box sx={{ height: 500, width: "100%" }}>
-            <DataGrid
-              rows={users}
-              columns={columns}
-              rowCount={totalCount}
-              loading={isLoading || isFetching}
-              paginationMode="server"
-              paginationModel={{ page: page - 1, pageSize }}
-              onPaginationModelChange={(model: GridPaginationModel) => {
-                setPage(model.page + 1);
-                setPageSize(model.pageSize);
-              }}
-              pageSizeOptions={[5, 10, 25, 50]}
-              disableRowSelectionOnClick
-              sx={{
-                border: "none",
-                "& .MuiDataGrid-cell:focus": { outline: "none" },
-                "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 700 },
-              }}
-            />
-          </Box>
+          {/* Table */}
+          <TableContainer>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell>User ID</TableCell>
+                  <TableCell>Full Name & Email</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Last Login</TableCell>
+                  <TableCell>Created Date</TableCell>
+                  <TableCell align="right">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {isLoading || isFetching ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
+                      <CircularProgress size={32} />
+                    </TableCell>
+                  </TableRow>
+                ) : users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 5, color: "text.secondary" }}>
+                      No user accounts match the selected criteria.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  users.map((u: UserItem) => (
+                    <TableRow key={u.id} hover>
+                      <TableCell sx={{ color: "text.secondary" }}>#{u.id}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                          <Avatar sx={{ bgcolor: "#1976D2", width: 34, height: 34, fontSize: "0.875rem", fontWeight: 600 }}>
+                            {u.full_name.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {u.full_name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {u.email}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={u.status}
+                          size="small"
+                          color={u.status === "Active" ? "success" : "default"}
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                      <TableCell>{formatDate(u.last_login)}</TableCell>
+                      <TableCell>{formatDate(u.created_at)}</TableCell>
+                      <TableCell align="right">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            setActionMenuAnchor(e.currentTarget);
+                            setMenuUser(u);
+                          }}
+                        >
+                          <MoreVertIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Pagination */}
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            component="div"
+            count={totalCount}
+            rowsPerPage={pageSize}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setPageSize(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+          />
         </CardContent>
       </Card>
 
-      {/* User Create/Edit Modal */}
+      {/* Row Action Dropdown Menu */}
+      <Menu
+        anchorEl={actionMenuAnchor}
+        open={Boolean(actionMenuAnchor)}
+        onClose={() => setActionMenuAnchor(null)}
+        slotProps={{ paper: { elevation: 2, sx: { minWidth: 180, borderRadius: 2 } } }}
+      >
+        <MenuItem
+          onClick={() => {
+            if (menuUser) handleOpenEdit(menuUser);
+            setActionMenuAnchor(null);
+          }}
+        >
+          <EditOutlinedIcon fontSize="small" sx={{ mr: 1.5, color: "text.secondary" }} />
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            Edit User & Password
+          </Typography>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (menuUser) handleOpenDelete(menuUser);
+            setActionMenuAnchor(null);
+          }}
+          sx={{ color: "error.main" }}
+        >
+          <DeleteOutlinedIcon fontSize="small" sx={{ mr: 1.5, color: "error.main" }} />
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Delete User
+          </Typography>
+        </MenuItem>
+      </Menu>
+
+      {/* Create / Edit Form Modal */}
       <UserFormModal
         open={formOpen}
         userToEdit={selectedUser}
@@ -304,10 +349,10 @@ export const Users: React.FC = () => {
         onSubmit={handleFormSubmit}
       />
 
-      {/* User Delete Confirm Dialog */}
+      {/* Delete Confirmation */}
       <ConfirmDialog
         open={deleteDialogOpen}
-        title="Delete User"
+        title="Delete User Account"
         message={`Are you sure you want to delete user "${userToDelete?.full_name || userToDelete?.email}"? This action cannot be undone.`}
         confirmText="Delete User"
         loading={deleteMutation.isPending}

@@ -36,6 +36,15 @@ router.get(
     catchAsync(UserController.profile)
 );
 
+// Reset Password
+router.post(
+    "/reset-password",
+    authenticate,
+    userOnly,
+    validateSchema(UserValidationSchemas.resetPasswordSchema),
+    catchAsync(UserController.resetPassword)
+);
+
 // Logout
 router.post(
     USER_ROUTES.LOGOUT,

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -10,7 +10,7 @@ import {
   TextField,
   Button,
   CircularProgress,
-  Grid,
+  Box,
 } from "@mui/material";
 import type { CreateSignerRolePayload, SignerRoleItem, UpdateSignerRolePayload } from "../../types/signerRole.types";
 
@@ -39,7 +39,7 @@ export const SignerRoleFormModal: React.FC<SignerRoleFormModalProps> = ({
   const isEditing = !!roleToEdit;
 
   const {
-    register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -78,32 +78,41 @@ export const SignerRoleFormModal: React.FC<SignerRoleFormModalProps> = ({
         {isEditing ? "Edit Signer Role" : "Create New Signer Role"}
       </DialogTitle>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent dividers>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Role Name"
-                placeholder="e.g. Primary Signer, Witness, Approver"
-                {...register("roleName")}
-                error={!!errors.roleName}
-                helperText={errors.roleName?.message}
-                autoFocus
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Description (Optional)"
-                placeholder="Describe the responsibility or authority of this signer role"
-                multiline
-                rows={3}
-                {...register("description")}
-                error={!!errors.description}
-                helperText={errors.description?.message}
-              />
-            </Grid>
-          </Grid>
+        <DialogContent dividers sx={{ p: 3 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+            <Controller
+              name="roleName"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Role Name"
+                  placeholder="e.g. Buyer, Seller, Witness, Approver"
+                  error={!!errors.roleName}
+                  helperText={errors.roleName?.message}
+                  autoFocus
+                />
+              )}
+            />
+
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="Description (Optional)"
+                  placeholder="Describe the responsibility or authority of this signer role"
+                  error={!!errors.description}
+                  helperText={errors.description?.message}
+                />
+              )}
+            />
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: 2.5 }}>
           <Button onClick={onClose} disabled={loading} variant="outlined" color="inherit">

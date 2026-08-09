@@ -1,10 +1,16 @@
 import api from "./axios";
-import { ENDPOINTS } from "../constants/apiEndpoints";
-import type { ProfileResponse } from "../types/auth.types";
 
 export const userApi = {
-  getProfile: async (): Promise<ProfileResponse> => {
-    const response = await api.get<ProfileResponse>(ENDPOINTS.USER.PROFILE);
+  getUserProfile: async () => {
+    const response = await api.get("/user/profile");
+    return response.data;
+  },
+
+  resetPassword: async (oldPassword: string, newPassword: string) => {
+    const response = await api.post("/user/reset-password", {
+      oldPassword,
+      newPassword,
+    });
     return response.data;
   },
 };

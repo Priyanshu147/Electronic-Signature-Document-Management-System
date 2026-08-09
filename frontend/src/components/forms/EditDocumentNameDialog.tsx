@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -9,13 +9,9 @@ import {
   DialogActions,
   TextField,
   Button,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
-  FormHelperText,
-  Grid,
+  CircularProgress,
+  Box,
 } from "@mui/material";
 import type { DocumentStatus } from "../../types/document.types";
 import { DOCUMENT_STATUS_OPTIONS } from "../../constants/appConstants";
@@ -45,11 +41,9 @@ export const EditDocumentNameDialog: React.FC<EditDocumentDialogProps> = ({
   onSubmit,
 }) => {
   const {
-    register,
+    control,
     handleSubmit,
     reset,
-    setValue,
-    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -58,8 +52,6 @@ export const EditDocumentNameDialog: React.FC<EditDocumentDialogProps> = ({
       status: "Draft",
     },
   });
-
-  const selectedStatus = watch("status");
 
   useEffect(() => {
     reset({
@@ -73,42 +65,50 @@ export const EditDocumentNameDialog: React.FC<EditDocumentDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontWeight: 700 }}>Edit Document Details</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ fontWeight: 700 }}>Edit Document Details & Status</DialogTitle>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent dividers>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Document Name"
-                {...register("documentName")}
-                error={!!errors.documentName}
-                helperText={errors.documentName?.message}
-                autoFocus
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <FormControl fullWidth error={!!errors.status}>
-                <InputLabel id="edit-doc-status-label">Document Status</InputLabel>
-                <Select
-                  labelId="edit-doc-status-label"
+        <DialogContent dividers sx={{ p: 3 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+            <Controller
+              name="documentName"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Document Name"
+                  placeholder="e.g. Non-Disclosure Agreement 2026"
+                  error={!!errors.documentName}
+                  helperText={errors.documentName?.message}
+                  autoFocus
+                />
+              )}
+            />
+
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  select
+                  fullWidth
                   label="Document Status"
-                  value={selectedStatus || "Draft"}
-                  onChange={(e) => setValue("status", e.target.value as DocumentStatus)}
+                  error={!!errors.status}
+                  helperText={errors.status?.message}
                 >
                   {DOCUMENT_STATUS_OPTIONS.map((opt) => (
                     <MenuItem key={opt} value={opt}>
                       {opt}
                     </MenuItem>
                   ))}
-                </Select>
-                {errors.status && <FormHelperText>{errors.status.message}</FormHelperText>}
-              </FormControl>
-            </Grid>
-          </Grid>
+                </TextField>
+              )}
+            />
+          </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
+        <DialogActions sx={{ p: 2.5 }}>
           <Button onClick={onClose} disabled={loading} variant="outlined" color="inherit">
             Cancel
           </Button>

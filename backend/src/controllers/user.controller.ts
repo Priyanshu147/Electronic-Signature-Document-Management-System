@@ -47,7 +47,7 @@ const UserController = {
 
     /**
      * ===========================================================
-     * Admin Profile
+     * User Profile
      * ===========================================================
      */
     async profile(req: AuthRequest, res: Response) {
@@ -58,6 +58,21 @@ const UserController = {
             data,
         });
     },
-}
+
+    /**
+     * ===========================================================
+     * Reset Password
+     * ===========================================================
+     */
+    async resetPassword(req: AuthRequest, res: Response) {
+        const { oldPassword, newPassword } = req.body;
+        await UserService.resetPassword(req.user!.id, oldPassword, newPassword);
+
+        res.status(200).json({
+            success: true,
+            message: "Password reset successfully.",
+        });
+    },
+};
 
 export default UserController;

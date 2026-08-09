@@ -1,13 +1,14 @@
 import React from "react";
 import {
-  Button,
   Dialog,
-  DialogActions,
+  DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogTitle,
+  DialogActions,
+  Button,
   CircularProgress,
 } from "@mui/material";
+import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -15,7 +16,6 @@ interface ConfirmDialogProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  confirmColor?: "primary" | "secondary" | "error" | "info" | "success" | "warning";
   loading?: boolean;
   onConfirm: () => void;
   onClose: () => void;
@@ -27,26 +27,28 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   message,
   confirmText = "Confirm",
   cancelText = "Cancel",
-  confirmColor = "error",
   loading = false,
   onConfirm,
   onClose,
 }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontWeight: 600 }}>{title}</DialogTitle>
-      <DialogContent>
+      <DialogTitle sx={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 1 }}>
+        <WarningAmberOutlinedIcon color="error" />
+        {title}
+      </DialogTitle>
+      <DialogContent dividers>
         <DialogContentText>{message}</DialogContentText>
       </DialogContent>
-      <DialogActions sx={{ p: 2, pt: 0 }}>
-        <Button onClick={onClose} disabled={loading} color="inherit" variant="outlined">
+      <DialogActions sx={{ p: 2.5 }}>
+        <Button onClick={onClose} disabled={loading} variant="outlined" color="inherit">
           {cancelText}
         </Button>
         <Button
           onClick={onConfirm}
           disabled={loading}
-          color={confirmColor}
           variant="contained"
+          color="error"
           startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
         >
           {confirmText}

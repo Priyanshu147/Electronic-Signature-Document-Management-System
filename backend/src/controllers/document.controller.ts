@@ -13,7 +13,7 @@ import {
 
 import path from "path";
 import fs from "fs";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 const DocumentController = {
     /**
@@ -174,12 +174,80 @@ const DocumentController = {
                 success: false,
                 message: "File not found.",
             });
+            return;
         }
 
-        res.download(
-            filePath,
-            document.document_name
-        );
+        // Fetch saved signature fields for this document
+        const fields = await DocumentService.getSignatureFields(id);
+
+        let pdfBuffer = fs.readFileSync(filePath);
+
+        if (fields && fields.length > 0) {
+            try {
+                const pdfDoc = await PDFDocument.load(pdfBuffer);
+                const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+                const pages = pdfDoc.getPages();
+
+                for (const field of fields) {
+                    const pageIdx = field.page_number - 1;
+                    if (pageIdx >= 0 && pageIdx < pages.length) {
+                        const page = pages[pageIdx];
+                        const { width: pageW, height: pageH } = page.getSize();
+
+                        const boxW = Math.max((field.width / 100) * pageW, 100);
+                        const boxH = Math.max((field.height / 100) * pageH, 35);
+                        const pdfX = Math.max(0, (field.x_position / 100) * pageW);
+                        const pdfY = Math.max(0, pageH - ((field.y_position / 100) * pageH) - boxH);
+
+                        // Draw signature field background box
+                        page.drawRectangle({
+                            x: pdfX,
+                            y: pdfY,
+                            width: boxW,
+                            height: boxH,
+                            borderColor: rgb(0, 0, 0), // #000000ff (indigo)
+                            borderWidth: 2,
+                            color: rgb(0.93, 0.93, 0.99), // light indigo tint
+                            opacity: 0.9,
+                        });
+
+                        // Draw Signer Role title
+                        const text = `${field.role_name}`;
+                        const fontSize = Math.max(8, Math.min(12, boxH * 0.28));
+
+                        page.drawText(text, {
+                            x: pdfX + 8,
+                            y: pdfY + boxH - fontSize - 6,
+                            size: fontSize,
+                            font,
+                            color: rgb(0, 0, 0),
+                        });
+
+                        // Draw "Sign Here" label
+                        page.drawText("Sign Here", {
+                            x: pdfX + 8,
+                            y: pdfY + 6,
+                            size: Math.max(7, fontSize - 2),
+                            font,
+                            color: rgb(0, 0, 0),
+                        });
+                    }
+                }
+
+                const modifiedBytes = await pdfDoc.save();
+                pdfBuffer = Buffer.from(modifiedBytes);
+            } catch (err) {
+                console.error("Failed to render signature boxes on downloaded PDF:", err);
+            }
+        }
+
+        const fileName = document.document_name.endsWith(".pdf")
+            ? document.document_name
+            : `${document.document_name}.pdf`;
+
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+        res.send(pdfBuffer);
     },
     /**
      * ===========================================================

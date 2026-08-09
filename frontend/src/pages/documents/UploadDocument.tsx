@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -10,17 +10,17 @@ import {
   TextField,
   Button,
   Typography,
-  CircularProgress,
   Alert,
+  IconButton,
   LinearProgress,
 } from "@mui/material";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import DeleteIcon from "@mui/icons-material/Delete";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import toast from "react-hot-toast";
 
 import { documentApi } from "../../api/document.api";
-import { PageHeader } from "../../components/common/PageHeader";
 import { MAX_FILE_SIZE } from "../../constants/appConstants";
 import { formatBytes } from "../../utils/formatters";
 
@@ -41,7 +41,7 @@ export const UploadDocument: React.FC = () => {
   const [uploading, setUploading] = useState<boolean>(false);
 
   const {
-    register,
+    control,
     handleSubmit,
     setValue,
     formState: { errors },
@@ -52,13 +52,12 @@ export const UploadDocument: React.FC = () => {
     },
   });
 
-  const handleFileSelect = (file: File | null) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError(null);
-    if (!file) {
-      setSelectedFile(null);
-      return;
-    }
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
+    const file = files[0];
     if (file.type !== "application/pdf") {
       setFileError("Only PDF files are allowed.");
       setSelectedFile(null);
@@ -72,17 +71,8 @@ export const UploadDocument: React.FC = () => {
     }
 
     setSelectedFile(file);
-
-    // Auto fill document name if empty
     const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
     setValue("documentName", fileNameWithoutExt, { shouldValidate: true });
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelect(e.dataTransfer.files[0]);
-    }
   };
 
   const onSubmit = async (data: UploadFormValues) => {
@@ -108,80 +98,87 @@ export const UploadDocument: React.FC = () => {
   };
 
   return (
-    <Box>
-      <PageHeader
-        title="Upload PDF Document"
-        subtitle="Upload a PDF document to prepare signature fields"
-      />
+    <Box sx={{ maxWidth: 720, mx: "auto" }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+        <IconButton onClick={() => navigate("/user/documents")} size="small" sx={{ border: "1px solid #E5E7EB" }}>
+          <ArrowBackIcon fontSize="small" />
+        </IconButton>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: "#1F2937" }}>
+            Upload PDF Document
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Upload a PDF document to prepare signature fields and signer roles
+          </Typography>
+        </Box>
+      </Box>
 
-      <Card sx={{ maxWidth: 700, mx: "auto", borderRadius: 3, boxShadow: "0 10px 30px rgba(0,0,0,0.06)" }}>
-        <CardContent sx={{ p: 4 }}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            {/* File Dropzone */}
-            <Box
-              component="label"
-              onDragOver={(e: React.DragEvent) => e.preventDefault()}
-              onDrop={handleDrop}
-              sx={{
-                display: "block",
-                p: 4,
-                mb: 3,
-                textAlign: "center",
-                borderRadius: 3,
-                borderStyle: "dashed",
-                borderWidth: 2,
-                borderColor: fileError ? "error.main" : selectedFile ? "primary.main" : "grey.400",
-                backgroundColor: selectedFile ? "action.hover" : "background.paper",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  borderColor: "primary.main",
-                  backgroundColor: "action.hover",
-                },
-              }}
-            >
-              <input
-                type="file"
-                accept="application/pdf"
-                style={{ display: "none" }}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  if (e.target.files && e.target.files[0]) {
-                    handleFileSelect(e.target.files[0]);
-                  }
-                }}
-              />
+      <Card elevation={0}>
+        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* File Dropzone Area */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#374151", mb: 1 }}>
+                Select PDF Document
+              </Typography>
 
               {selectedFile ? (
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <PictureAsPdfIcon color="error" sx={{ fontSize: 56, mb: 1 }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                <Box
+                  sx={{
+                    p: 3,
+                    borderRadius: 2.5,
+                    border: "2px solid #1976D2",
+                    bgcolor: "#EFF6FF",
+                    textAlign: "center",
+                  }}
+                >
+                  <PictureAsPdfOutlinedIcon sx={{ fontSize: 48, color: "#DC2626", mb: 1 }} />
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     {selectedFile.name}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
                     Size: {formatBytes(selectedFile.size)} • PDF Document
                   </Typography>
                   <Button
-                    size="small"
                     color="error"
-                    startIcon={<DeleteIcon />}
-                    onClick={(e: React.MouseEvent) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedFile(null);
-                    }}
-                    sx={{ mt: 2 }}
+                    size="small"
+                    startIcon={<DeleteOutlinedIcon />}
+                    onClick={() => setSelectedFile(null)}
+                    sx={{ mt: 1.5 }}
                   >
-                    Remove File
+                    Remove Selected File
                   </Button>
                 </Box>
               ) : (
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <CloudUploadIcon color="primary" sx={{ fontSize: 56, mb: 1 }} />
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
-                    Drag & Drop PDF here
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    or click to browse files from your device
+                <Box
+                  component="label"
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    p: 4,
+                    borderRadius: 2.5,
+                    border: "2px dashed",
+                    borderColor: fileError ? "error.main" : "#CBD5E1",
+                    bgcolor: "#F8FAFC",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    "&:hover": {
+                      borderColor: "#1976D2",
+                      bgcolor: "#EFF6FF",
+                    },
+                  }}
+                >
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleFileSelect}
+                    style={{ display: "none" }}
+                  />
+                  <CloudUploadOutlinedIcon sx={{ fontSize: 48, color: "#1976D2", mb: 1 }} />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5 }}>
+                    Click or drag PDF file to this area to upload
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Supported format: PDF only • Maximum size: 5MB
@@ -196,36 +193,41 @@ export const UploadDocument: React.FC = () => {
               </Alert>
             )}
 
-            {/* Document Name Input */}
-            <TextField
-              fullWidth
-              label="Document Name"
-              placeholder="e.g. Non-Disclosure Agreement 2026"
-              {...register("documentName")}
-              error={!!errors.documentName}
-              helperText={errors.documentName?.message}
-              sx={{ mb: 3 }}
+            {/* Document Name */}
+            <Controller
+              name="documentName"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Document Name"
+                  placeholder="e.g. Non-Disclosure Agreement 2026"
+                  error={!!errors.documentName}
+                  helperText={errors.documentName?.message}
+                />
+              )}
             />
 
-            {uploading && <LinearProgress sx={{ mb: 3, borderRadius: 1 }} />}
+            {uploading && <LinearProgress sx={{ mt: 3, borderRadius: 1 }} />}
 
-            {/* Actions */}
-            <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+            {/* Buttons */}
+            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5, mt: 4 }}>
               <Button
                 variant="outlined"
-                color="inherit"
                 onClick={() => navigate("/user/documents")}
                 disabled={uploading}
+                sx={{ borderRadius: 2 }}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="contained"
-                color="primary"
+                size="large"
                 disabled={uploading || !selectedFile}
-                startIcon={uploading ? <CircularProgress size={20} color="inherit" /> : <CloudUploadIcon />}
-                sx={{ px: 4, py: 1.2, fontWeight: 700 }}
+                startIcon={<CloudUploadOutlinedIcon />}
+                sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}
               >
                 {uploading ? "Uploading PDF..." : "Upload & Prepare Signatures"}
               </Button>
