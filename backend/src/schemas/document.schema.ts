@@ -9,9 +9,19 @@ const uploadDocumentSchema = z.object({
             .max(255)
     })
 });
+const updateDocumentSchema = z.object({
 
+    documentName: z
+        .string()
+        .trim()
+        .min(1)
+        .max(255)
+
+
+});
 const documentValidationSchemas = {
     uploadDocumentSchema,
+    updateDocumentSchema
 };
 
 export default documentValidationSchemas;

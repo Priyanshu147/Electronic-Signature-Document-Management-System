@@ -99,19 +99,19 @@ export const USER_ROUTES = {
 export const DOCUMENT_ROUTES = {
     UPLOAD: "/upload",
 
-    GET_ALL: "/",
+    GET_ALL: "/documents",
 
-    GET_BY_ID: "/:id",
+    GET_BY_ID: "/documents/:id",
 
-    UPDATE: "/:id",
+    UPDATE: "/documents/:id",
 
-    DELETE: "/document/:id",
+    DELETE: "/documents/:id",
 
     DOWNLOAD: "/download/:id",
 
-    SAVE_SIGNATURE_FIELDS: "/:id/signature-fields",
+    SAVE_SIGNATURE_FIELDS: "/documents/:id/signature-fields",
 
-    GET_SIGNATURE_FIELDS: "/:id/signature-fields",
+    GET_SIGNATURE_FIELDS: "/documents/:id/signature-fields",
 };
 
 /* ===========================================================
@@ -136,7 +136,7 @@ export const TABLES = {
     DOCUMENT: "documents",
     SIGNATURE_FIELD: "signature_fields",
     SIGNER_ROLE:"signer_roles",
-    DOCUMENT_SIGNER_FIELDS: "document_signer_fields",
+    DOCUMENT_SIGNER_FIELDS: "document_signature_fields",
 };
 
 /* ===========================================================
