@@ -216,13 +216,27 @@ const AdminService = {
     limit?: number;
     searchText?: string;
     status?: string | null;
+    sortBy?: string;
+    sortOrder?: string;
   }) {
     const {
       page = 1,
       limit = 10,
       searchText = "",
       status = null,
+      sortBy,
+      sortOrder,
     } = filters;
+
+    const userSortMap: Record<string, string> = {
+      full_name: "full_name",
+      email: "email",
+      status: "status",
+      created_at: "created_at",
+    };
+
+    const orderByCol = (sortBy && userSortMap[sortBy]) ? userSortMap[sortBy] : "created_at";
+    const orderDir = (sortOrder && String(sortOrder).toLowerCase() === "asc") ? "ASC" : "DESC";
 
     const offset = (page - 1) * limit;
 
@@ -258,7 +272,7 @@ const AdminService = {
       created_at
     FROM ${TABLES.USER}
     ${whereClause}
-    ORDER BY created_at DESC
+    ORDER BY ${orderByCol} ${orderDir}
     LIMIT ?
     OFFSET ?
     `,

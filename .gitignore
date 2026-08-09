@@ -58,3 +58,5 @@ backend/src/uploads/*
 # ==============================
 tmp/
 temp/
+
+*.pdf

@@ -26,6 +26,15 @@ export interface DocumentDetail {
   updated_at: string;
 }
 
+export interface GetDocumentsParams {
+  page?: number;
+  limit?: number;
+  searchText?: string;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
 export interface DocumentListPagination {
   page: number;
   limit: number;

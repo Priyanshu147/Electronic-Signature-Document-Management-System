@@ -18,6 +18,7 @@ import {
   TableCell,
   TableContainer,
   TablePagination,
+  TableSortLabel,
   Chip,
   IconButton,
   Menu,
@@ -37,6 +38,7 @@ import toast from "react-hot-toast";
 import { adminApi } from "../../api/admin.api";
 import type { CreateUserPayload, UpdateUserPayload, UserItem } from "../../types/user.types";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
+import { useDebounce } from "../../hooks/useDebounce";
 import { formatDate } from "../../utils/formatters";
 import { UserFormModal } from "./UserForm";
 
@@ -44,8 +46,17 @@ export const Users: React.FC = () => {
   const queryClient = useQueryClient();
   const [page, setPage] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [searchText, setSearchText] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const debouncedSearchText = useDebounce(searchInput, 400);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const handleRequestSort = (property: string) => {
+    const isAsc = sortBy === property && sortOrder === "asc";
+    setSortOrder(isAsc ? "desc" : "asc");
+    setSortBy(property);
+  };
 
   const [formOpen, setFormOpen] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
@@ -57,13 +68,15 @@ export const Users: React.FC = () => {
   const [menuUser, setMenuUser] = useState<UserItem | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["users", page + 1, pageSize, searchText, statusFilter],
+    queryKey: ["users", page + 1, pageSize, debouncedSearchText, statusFilter, sortBy, sortOrder],
     queryFn: () =>
       adminApi.getUsers({
         page: page + 1,
         limit: pageSize,
-        searchText: searchText || undefined,
+        searchText: debouncedSearchText || undefined,
         status: statusFilter || undefined,
+        sortBy,
+        sortOrder,
       }),
   });
 
@@ -185,9 +198,9 @@ export const Users: React.FC = () => {
             <TextField
               size="small"
               placeholder="Search by name or email..."
-              value={searchText}
+              value={searchInput}
               onChange={(e) => {
-                setSearchText(e.target.value);
+                setSearchInput(e.target.value);
                 setPage(0);
               }}
               sx={{ width: 300 }}
@@ -224,12 +237,36 @@ export const Users: React.FC = () => {
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell>User ID</TableCell>
-                  <TableCell>Full Name & Email</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Last Login</TableCell>
-                  <TableCell>Created Date</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>User ID</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "full_name"}
+                      direction={sortBy === "full_name" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("full_name")}
+                    >
+                      Full Name & Email
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "status"}
+                      direction={sortBy === "status" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("status")}
+                    >
+                      Status
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Last Login</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "created_at"}
+                      direction={sortBy === "created_at" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("created_at")}
+                    >
+                      Created Date
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -304,6 +341,9 @@ export const Users: React.FC = () => {
               setPageSize(parseInt(e.target.value, 10));
               setPage(0);
             }}
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}–${to} of ${count} users (Page ${page + 1} of ${Math.ceil(count / pageSize) || 1})`
+            }
           />
         </CardContent>
       </Card>

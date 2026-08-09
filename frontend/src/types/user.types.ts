@@ -27,6 +27,8 @@ export interface GetUsersParams {
   limit?: number;
   searchText?: string;
   status?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export interface UserListResponse {

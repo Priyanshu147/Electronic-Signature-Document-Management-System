@@ -138,12 +138,17 @@ const DocumentController = {
         const status =
             String(req.query.status || "");
 
+        const sortBy = req.query.sortBy ? String(req.query.sortBy) : undefined;
+        const sortOrder = req.query.sortOrder ? (String(req.query.sortOrder).toLowerCase() === "asc" ? "asc" : "desc") : undefined;
+
         const data =
             await DocumentService.getDocuments({
                 page,
                 limit,
                 searchText,
                 status,
+                sortBy,
+                sortOrder,
             });
 
         res.status(200).json({

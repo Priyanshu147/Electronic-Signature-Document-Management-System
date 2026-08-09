@@ -171,13 +171,31 @@ const DocumentService = {
         limit: number;
         searchText?: string;
         status?: string;
+        sortBy?: string;
+        sortOrder?: "asc" | "desc" | "ASC" | "DESC";
     }) {
         const {
             page,
             limit,
             searchText = "",
             status = "",
+            sortBy,
+            sortOrder,
         } = filters;
+
+        const sortMap: Record<string, string> = {
+            document_name: "d.document_name",
+            original_file_name: "d.original_file_name",
+            file_size: "d.file_size",
+            page_count: "d.page_count",
+            status: "d.status",
+            created_at: "d.created_at",
+            uploaded_by: "u.full_name",
+            number_of_signers: "number_of_signers",
+        };
+
+        const orderByCol = (sortBy && sortMap[sortBy]) ? sortMap[sortBy] : "d.created_at";
+        const orderDir = (sortOrder && String(sortOrder).toLowerCase() === "asc") ? "ASC" : "DESC";
 
         const offset = (page - 1) * limit;
 
@@ -271,7 +289,7 @@ const DocumentService = {
             d.created_at,
             u.full_name
 
-        ORDER BY d.created_at DESC
+        ORDER BY ${orderByCol} ${orderDir}
 
         LIMIT ?
 

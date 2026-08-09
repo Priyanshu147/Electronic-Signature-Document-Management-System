@@ -12,6 +12,7 @@ import {
   TableRow,
   TableCell,
   TableContainer,
+  TableSortLabel,
   IconButton,
   Menu,
   MenuItem,
@@ -35,6 +36,15 @@ import { SignerRoleFormModal } from "./SignerRoleForm";
 export const SignerRoleList: React.FC = () => {
   const queryClient = useQueryClient();
 
+  const [sortBy, setSortBy] = useState<string>("role_name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const handleRequestSort = (property: string) => {
+    const isAsc = sortBy === property && sortOrder === "asc";
+    setSortOrder(isAsc ? "desc" : "asc");
+    setSortBy(property);
+  };
+
   const [formOpen, setFormOpen] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<SignerRoleItem | null>(null);
 
@@ -45,11 +55,24 @@ export const SignerRoleList: React.FC = () => {
   const [menuRole, setMenuRole] = useState<SignerRoleItem | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["signerRolesList"],
+    queryKey: ["signerRoles"],
     queryFn: () => signerRoleApi.getSignerRoles(),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const roles = data?.data || [];
+
+  const sortedRoles = React.useMemo(() => {
+    if (!roles) return [];
+    return [...roles].sort((a: any, b: any) => {
+      const valA = (a[sortBy] || "").toString().toLowerCase();
+      const valB = (b[sortBy] || "").toString().toLowerCase();
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [roles, sortBy, sortOrder]);
 
   // Create Mutation
   const createMutation = useMutation({
@@ -57,7 +80,7 @@ export const SignerRoleList: React.FC = () => {
     onSuccess: () => {
       toast.success("Signer role created successfully!");
       setFormOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["signerRolesList"] });
+      queryClient.invalidateQueries({ queryKey: ["signerRoles"] });
       queryClient.invalidateQueries({ queryKey: ["userSignerRolesSummary"] });
     },
     onError: (err: any) => {
@@ -73,7 +96,7 @@ export const SignerRoleList: React.FC = () => {
       toast.success("Signer role updated successfully!");
       setFormOpen(false);
       setSelectedRole(null);
-      queryClient.invalidateQueries({ queryKey: ["signerRolesList"] });
+      queryClient.invalidateQueries({ queryKey: ["signerRoles"] });
       queryClient.invalidateQueries({ queryKey: ["userSignerRolesSummary"] });
     },
     onError: (err: any) => {
@@ -88,7 +111,7 @@ export const SignerRoleList: React.FC = () => {
       toast.success("Signer role deleted successfully!");
       setDeleteDialogOpen(false);
       setRoleToDelete(null);
-      queryClient.invalidateQueries({ queryKey: ["signerRolesList"] });
+      queryClient.invalidateQueries({ queryKey: ["signerRoles"] });
       queryClient.invalidateQueries({ queryKey: ["userSignerRolesSummary"] });
     },
     onError: (err: any) => {
@@ -159,10 +182,34 @@ export const SignerRoleList: React.FC = () => {
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell>Role ID</TableCell>
-                  <TableCell>Role Name</TableCell>
-                  <TableCell>Description</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "id"}
+                      direction={sortBy === "id" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("id")}
+                    >
+                      Role ID
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "role_name"}
+                      direction={sortBy === "role_name" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("role_name")}
+                    >
+                      Role Name
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "description"}
+                      direction={sortBy === "description" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("description")}
+                    >
+                      Description
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -172,14 +219,14 @@ export const SignerRoleList: React.FC = () => {
                       <CircularProgress size={32} />
                     </TableCell>
                   </TableRow>
-                ) : roles.length === 0 ? (
+                ) : sortedRoles.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} align="center" sx={{ py: 5, color: "text.secondary" }}>
                       No signer roles defined yet. Click "Create Signer Role" to get started.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  roles.map((r: SignerRoleItem) => (
+                  sortedRoles.map((r: SignerRoleItem) => (
                     <TableRow key={r.id} hover>
                       <TableCell sx={{ color: "text.secondary" }}>#{r.id}</TableCell>
                       <TableCell>

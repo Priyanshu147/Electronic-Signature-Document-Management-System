@@ -159,8 +159,10 @@ export function getFilterParams(query: any) {
   return {
     page: Number(query.page) || 1,
     limit: Number(query.limit) || 10,
-    searchText: query.searchText ?? "",
-    status: query.status ?? null,
+    searchText: query.searchText ? String(query.searchText) : "",
+    status: query.status ? String(query.status) : null,
+    sortBy: query.sortBy ? String(query.sortBy) : undefined,
+    sortOrder: (query.sortOrder && String(query.sortOrder).toLowerCase() === "asc") ? "asc" : "desc",
   };
 }
 

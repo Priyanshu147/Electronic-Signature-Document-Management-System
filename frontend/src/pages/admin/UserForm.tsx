@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -64,7 +64,7 @@ export const UserFormModal: React.FC<UserFormProps> = ({
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(isEditing ? updateUserSchema : createUserSchema),
+    resolver: zodResolver(isEditing ? updateUserSchema : createUserSchema) as Resolver<FormValues>,
     defaultValues: {
       fullName: "",
       email: "",
