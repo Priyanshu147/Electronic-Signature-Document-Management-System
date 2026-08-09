@@ -100,6 +100,8 @@ const AdminController = {
       limit,
       searchText,
       status,
+      sortBy,
+      sortOrder,
     } = getFilterParams(req.query);
 
     const data = await AdminService.getUsers({
@@ -107,6 +109,8 @@ const AdminController = {
       limit,
       searchText,
       status,
+      sortBy,
+      sortOrder,
     });
 
     res.status(200).json({

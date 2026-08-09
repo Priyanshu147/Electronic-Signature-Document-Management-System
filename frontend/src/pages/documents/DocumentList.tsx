@@ -19,6 +19,7 @@ import {
   TableCell,
   TableContainer,
   TablePagination,
+  TableSortLabel,
   Chip,
   IconButton,
   Menu,
@@ -54,6 +55,14 @@ export const DocumentList: React.FC = () => {
   const [searchInput, setSearchInput] = useState<string>("");
   const debouncedSearchText = useDebounce(searchInput, 400);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const handleRequestSort = (property: string) => {
+    const isAsc = sortBy === property && sortOrder === "asc";
+    setSortOrder(isAsc ? "desc" : "asc");
+    setSortBy(property);
+  };
 
   const [renameDialogOpen, setRenameDialogOpen] = useState<boolean>(false);
   const [docToRename, setDocToRename] = useState<DocumentItem | null>(null);
@@ -65,13 +74,15 @@ export const DocumentList: React.FC = () => {
   const [menuDoc, setMenuDoc] = useState<DocumentItem | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["documents", page + 1, pageSize, debouncedSearchText, statusFilter],
+    queryKey: ["documents", page + 1, pageSize, debouncedSearchText, statusFilter, sortBy, sortOrder],
     queryFn: () =>
       documentApi.getDocuments({
         page: page + 1,
         limit: pageSize,
         searchText: debouncedSearchText || undefined,
         status: statusFilter || undefined,
+        sortBy,
+        sortOrder,
       }),
   });
 
@@ -87,6 +98,7 @@ export const DocumentList: React.FC = () => {
       setRenameDialogOpen(false);
       setDocToRename(null);
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["userDocumentsSummary"] });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to update document.");
@@ -101,6 +113,7 @@ export const DocumentList: React.FC = () => {
       setDeleteDialogOpen(false);
       setDocToDelete(null);
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["userDocumentsSummary"] });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to delete document.");
@@ -221,13 +234,61 @@ export const DocumentList: React.FC = () => {
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>Document Name</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Uploaded By</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Uploaded Date</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "document_name"}
+                      direction={sortBy === "document_name" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("document_name")}
+                    >
+                      Document Name
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "uploaded_by"}
+                      direction={sortBy === "uploaded_by" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("uploaded_by")}
+                    >
+                      Uploaded By
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "status"}
+                      direction={sortBy === "status" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("status")}
+                    >
+                      Status
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "created_at"}
+                      direction={sortBy === "created_at" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("created_at")}
+                    >
+                      Uploaded Date
+                    </TableSortLabel>
+                  </TableCell>
                   <TableCell align="center" sx={{ fontWeight: 700 }}>Pages</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>File Size</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Signers</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "file_size"}
+                      direction={sortBy === "file_size" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("file_size")}
+                    >
+                      File Size
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "number_of_signers"}
+                      direction={sortBy === "number_of_signers" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("number_of_signers")}
+                    >
+                      Signers
+                    </TableSortLabel>
+                  </TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>

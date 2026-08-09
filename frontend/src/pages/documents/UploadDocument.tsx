@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Box,
   Card,
@@ -36,6 +37,7 @@ type UploadFormValues = z.infer<typeof uploadSchema>;
 
 export const UploadDocument: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
@@ -85,6 +87,9 @@ export const UploadDocument: React.FC = () => {
     try {
       const res = await documentApi.uploadDocument(selectedFile, data.documentName);
       toast.success(res.message || "Document uploaded successfully!");
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["userDocumentsSummary"] });
+      queryClient.invalidateQueries({ queryKey: ["adminDashboardStats"] });
       if (res.data?.id) {
         navigate(`/user/documents/${res.data.id}/editor`);
       } else {

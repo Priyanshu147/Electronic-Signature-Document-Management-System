@@ -18,6 +18,7 @@ import {
   TableCell,
   TableContainer,
   TablePagination,
+  TableSortLabel,
   Chip,
   IconButton,
   Menu,
@@ -48,6 +49,14 @@ export const Users: React.FC = () => {
   const [searchInput, setSearchInput] = useState<string>("");
   const debouncedSearchText = useDebounce(searchInput, 400);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const handleRequestSort = (property: string) => {
+    const isAsc = sortBy === property && sortOrder === "asc";
+    setSortOrder(isAsc ? "desc" : "asc");
+    setSortBy(property);
+  };
 
   const [formOpen, setFormOpen] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
@@ -59,13 +68,15 @@ export const Users: React.FC = () => {
   const [menuUser, setMenuUser] = useState<UserItem | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["users", page + 1, pageSize, debouncedSearchText, statusFilter],
+    queryKey: ["users", page + 1, pageSize, debouncedSearchText, statusFilter, sortBy, sortOrder],
     queryFn: () =>
       adminApi.getUsers({
         page: page + 1,
         limit: pageSize,
         searchText: debouncedSearchText || undefined,
         status: statusFilter || undefined,
+        sortBy,
+        sortOrder,
       }),
   });
 
@@ -226,12 +237,36 @@ export const Users: React.FC = () => {
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell>User ID</TableCell>
-                  <TableCell>Full Name & Email</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Last Login</TableCell>
-                  <TableCell>Created Date</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>User ID</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "full_name"}
+                      direction={sortBy === "full_name" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("full_name")}
+                    >
+                      Full Name & Email
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "status"}
+                      direction={sortBy === "status" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("status")}
+                    >
+                      Status
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Last Login</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    <TableSortLabel
+                      active={sortBy === "created_at"}
+                      direction={sortBy === "created_at" ? sortOrder : "asc"}
+                      onClick={() => handleRequestSort("created_at")}
+                    >
+                      Created Date
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

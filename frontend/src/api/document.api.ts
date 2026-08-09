@@ -3,17 +3,13 @@ import { ENDPOINTS } from "../constants/apiEndpoints";
 import type {
   DocumentDetail,
   DocumentListResponse,
+  GetDocumentsParams,
   SaveSignatureFieldsRequest,
   SignatureFieldItem,
 } from "../types/document.types";
 
 export const documentApi = {
-  getDocuments: async (params?: {
-    page?: number;
-    limit?: number;
-    searchText?: string;
-    status?: string;
-  }): Promise<DocumentListResponse> => {
+  getDocuments: async (params?: GetDocumentsParams): Promise<DocumentListResponse> => {
     const response = await api.get<DocumentListResponse>(ENDPOINTS.DOCUMENT.DOCUMENTS, {
       params,
     });
