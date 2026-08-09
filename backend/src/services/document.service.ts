@@ -133,17 +133,21 @@ const DocumentService = {
      **/
     async updateDocument(
         id: number,
-        documentName: string
+        documentName: string,
+        status?: string
     ) {
+        let query = `UPDATE ${TABLES.DOCUMENT} SET document_name = ?`;
+        const params: any[] = [documentName];
 
-        const [result]: any = await db.query(
-            `
-        UPDATE ${TABLES.DOCUMENT}
-        SET document_name=?
-        WHERE id=?
-        `,
-            [documentName, id]
-        );
+        if (status) {
+            query += `, status = ?`;
+            params.push(status);
+        }
+
+        query += ` WHERE id = ?`;
+        params.push(id);
+
+        const [result]: any = await db.query(query, params);
 
         if (result.affectedRows === 0) {
             throw new APIError(

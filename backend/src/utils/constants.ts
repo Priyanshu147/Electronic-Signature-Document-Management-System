@@ -159,7 +159,7 @@ export const REFRESH_TOKEN_EXPIRY = "7d";
 export const FILE_UPLOAD = {
     PATH: "uploads/",
 
-    MAX_SIZE: 20 * 1024 * 1024,
+    MAX_SIZE: 5 * 1024 * 1024,
 
     ALLOWED_TYPES: [
         "application/pdf",

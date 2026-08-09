@@ -10,14 +10,14 @@ const uploadDocumentSchema = z.object({
     })
 });
 const updateDocumentSchema = z.object({
-
     documentName: z
         .string()
         .trim()
         .min(1)
-        .max(255)
-
-
+        .max(255),
+    status: z
+        .enum(["Draft", "In Progress", "Completed", "Archived"])
+        .optional()
 });
 const documentValidationSchemas = {
     uploadDocumentSchema,

@@ -103,11 +103,12 @@ const DocumentController = {
         res: Response
     ) {
         const id = Number(req.params.id);
-        const { documentName } = req.body;
+        const { documentName, status } = req.body;
 
         const result = await DocumentService.updateDocument(
             id,
-            documentName
+            documentName,
+            status
         );
 
         res.status(200).json({
