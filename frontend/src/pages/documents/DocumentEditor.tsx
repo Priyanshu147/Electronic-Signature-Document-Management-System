@@ -8,22 +8,25 @@ import {
   Box,
   Typography,
   Button,
-  IconButton,
-  TextField,
-  Tooltip,
-  CircularProgress,
-  Paper,
   Chip,
+  CircularProgress,
+  IconButton,
+  Tooltip,
   Alert,
+  Switch,
+  Divider,
+  TextField,
 } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SaveIcon from "@mui/icons-material/Save";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import toast from "react-hot-toast";
 
 import { documentApi } from "../../api/document.api";
@@ -46,10 +49,10 @@ export const DocumentEditor: React.FC = () => {
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [jumpPageInput, setJumpPageInput] = useState<string>("1");
   const [scale, setScale] = useState<number>(1.0);
 
   const [placedFields, setPlacedFields] = useState<PlacedSignatureField[]>([]);
+  const [selectedField, setSelectedField] = useState<PlacedSignatureField | null>(null);
   const [renameDialogOpen, setRenameDialogOpen] = useState<boolean>(false);
 
   // Fetch Document Details
@@ -91,14 +94,14 @@ export const DocumentEditor: React.FC = () => {
     },
   });
 
-  // Fetch PDF File Blob
+  // Fetch PDF File Blob (pass raw=true to fetch clean unburned PDF for editor)
   useEffect(() => {
     let active = true;
     let url: string | null = null;
 
     if (documentId) {
       documentApi
-        .downloadDocument(documentId)
+        .downloadDocument(documentId, true)
         .then((blob) => {
           if (active) {
             url = URL.createObjectURL(blob);
@@ -151,21 +154,28 @@ export const DocumentEditor: React.FC = () => {
   const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
     setCurrentPage(1);
-    setJumpPageInput("1");
   };
 
   const handleAddField = (newField: Omit<PlacedSignatureField, "tempId">) => {
     const tempId = `field-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-    setPlacedFields((prev) => [...prev, { ...newField, tempId }]);
-    toast.success(`Added ${newField.roleName} signature field to Page ${newField.pageNumber}`);
+    const created = { ...newField, tempId };
+    setPlacedFields((prev) => [...prev, created]);
+    setSelectedField(created);
+    toast.success(`Added ${newField.roleName} signature box to Page ${newField.pageNumber}`);
   };
 
   const handleUpdateField = (updated: PlacedSignatureField) => {
     setPlacedFields((prev) => prev.map((f) => (f.tempId === updated.tempId ? updated : f)));
+    if (selectedField?.tempId === updated.tempId) {
+      setSelectedField(updated);
+    }
   };
 
   const handleDeleteField = (tempId: string) => {
     setPlacedFields((prev) => prev.filter((f) => f.tempId !== tempId));
+    if (selectedField?.tempId === tempId) {
+      setSelectedField(null);
+    }
     toast.success("Signature field removed");
   };
 
@@ -183,15 +193,10 @@ export const DocumentEditor: React.FC = () => {
     await saveMutation.mutateAsync(payload);
   };
 
-  const handlePageJumpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const p = parseInt(jumpPageInput, 10);
-    if (!isNaN(p) && p >= 1 && p <= numPages) {
-      setCurrentPage(p);
-      const el = document.getElementById(`pdf-page-${p}`);
-      if (el) el.scrollIntoView({ behavior: "smooth" });
-    } else {
-      setJumpPageInput(String(currentPage));
+  const handlePageJump = (page: number) => {
+    if (page >= 1 && page <= numPages) {
+      setCurrentPage(page);
+      document.getElementById(`pdf-page-${page}`)?.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -200,12 +205,12 @@ export const DocumentEditor: React.FC = () => {
 
   if (docError) {
     return (
-      <Box sx={{ p: 4, textAlign: "center" }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
+      <Box sx={{ p: 5, textAlign: "center" }}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
           Failed to load document details. Please check if the document exists.
         </Alert>
         <Button variant="contained" onClick={() => navigate("/user/documents")}>
-          Back to Document List
+          Back to Documents List
         </Button>
       </Box>
     );
@@ -213,67 +218,70 @@ export const DocumentEditor: React.FC = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <Box sx={{ height: "calc(100vh - 100px)", display: "flex", flexDirection: "column" }}>
-        {/* Top Editor Toolbar */}
-        <Paper
-          elevation={0}
+      <Box sx={{ height: "calc(100vh - 110px)", display: "flex", flexDirection: "column" }}>
+        {/* DocuSign Top Editor Toolbar */}
+        <Box
           sx={{
-            p: 2,
+            bgcolor: "#FFFFFF",
+            border: "1px solid #E5E7EB",
+            borderRadius: 2.5,
+            p: 1.5,
+            px: 2.5,
             mb: 2,
-            borderRadius: 2,
-            border: "1px solid rgba(0,0,0,0.08)",
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
             justifyContent: "space-between",
             gap: 2,
-            bgcolor: "background.paper",
           }}
         >
+          {/* Header Info */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <IconButton onClick={() => navigate("/user/documents")} color="inherit" size="small">
-              <ArrowBackIcon />
+            <IconButton onClick={() => navigate("/user/documents")} size="small" sx={{ border: "1px solid #E5E7EB" }}>
+              <ArrowBackIcon fontSize="small" />
             </IconButton>
             <Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: "#1F2937" }}>
                   {documentDetail?.document_name || "Document Editor"}
                 </Typography>
-                <Tooltip title="Edit Document Details & Status">
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => setRenameDialogOpen(true)}
-                  >
-                    <DriveFileRenameOutlineIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                <IconButton size="small" onClick={() => setRenameDialogOpen(true)}>
+                  <EditOutlinedIcon fontSize="small" />
+                </IconButton>
               </Box>
-
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
                 Status:{" "}
                 <Chip
                   label={documentDetail?.status || "Draft"}
                   size="small"
-                  variant="outlined"
+                  color="primary"
                   onClick={() => setRenameDialogOpen(true)}
-                  sx={{ height: 20, cursor: "pointer" }}
+                  sx={{ cursor: "pointer", height: 20, fontSize: "0.7rem", fontWeight: 600 }}
                 />{" "}
                 • {numPages} Pages • {placedFields.length} Signature Field(s)
               </Typography>
             </Box>
           </Box>
 
-          {/* Controls: Zoom & Page Navigation */}
+          {/* Controls: Zoom, Page Navigation, Save */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
             {/* Zoom Controls */}
-            <Box sx={{ display: "flex", alignItems: "center", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 2, px: 0.5 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                border: "1px solid #E5E7EB",
+                borderRadius: 2,
+                px: 0.5,
+                bgcolor: "#F8FAFC",
+              }}
+            >
               <Tooltip title="Zoom Out">
                 <IconButton size="small" onClick={() => setScale((s) => Math.max(0.6, s - 0.1))}>
                   <ZoomOutIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
-              <Typography variant="caption" sx={{ minWidth: 45, textAlign: "center", fontWeight: 700 }}>
+              <Typography variant="body2" sx={{ minWidth: 44, textAlign: "center", fontWeight: 600 }}>
                 {Math.round(scale * 100)}%
               </Typography>
               <Tooltip title="Zoom In">
@@ -288,47 +296,37 @@ export const DocumentEditor: React.FC = () => {
               </Tooltip>
             </Box>
 
-            {/* Jump to Page */}
-            <Box
-              component="form"
-              onSubmit={handlePageJumpSubmit}
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
+            {/* Page Jump Controls */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <IconButton
                 size="small"
                 disabled={currentPage <= 1}
-                onClick={() => {
-                  const p = currentPage - 1;
-                  setCurrentPage(p);
-                  setJumpPageInput(String(p));
-                  document.getElementById(`pdf-page-${p}`)?.scrollIntoView({ behavior: "smooth" });
-                }}
+                onClick={() => handlePageJump(currentPage - 1)}
               >
-                <NavigateBeforeIcon />
+                <ChevronLeftIcon fontSize="small" />
               </IconButton>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="caption" color="text.secondary">
                 Page
               </Typography>
               <TextField
                 size="small"
-                value={jumpPageInput}
-                onChange={(e) => setJumpPageInput(e.target.value)}
-                sx={{ width: 60, "& input": { textAlign: "center", py: 0.5, px: 1 } }}
+                type="number"
+                value={currentPage}
+                onChange={(e) => handlePageJump(parseInt(e.target.value, 10) || 1)}
+                slotProps={{
+                  htmlInput: { min: 1, max: numPages || 1, style: { textAlign: "center", padding: "4px 8px" } },
+                }}
+                sx={{ width: 56 }}
               />
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="caption" color="text.secondary">
                 of {numPages || 1}
               </Typography>
               <IconButton
                 size="small"
                 disabled={currentPage >= numPages}
-                onClick={() => {
-                  const p = currentPage + 1;
-                  setCurrentPage(p);
-                  setJumpPageInput(String(p));
-                  document.getElementById(`pdf-page-${p}`)?.scrollIntoView({ behavior: "smooth" });
-                }}
+                onClick={() => handlePageJump(currentPage + 1)}
               >
-                <NavigateNextIcon />
+                <ChevronRightIcon fontSize="small" />
               </IconButton>
             </Box>
 
@@ -337,36 +335,45 @@ export const DocumentEditor: React.FC = () => {
               variant="contained"
               color="primary"
               startIcon={saveMutation.isPending ? <CircularProgress size={18} color="inherit" /> : <SaveIcon />}
-              onClick={handleSave}
               disabled={saveMutation.isPending}
-              sx={{ borderRadius: 2, px: 3, py: 0.8, fontWeight: 700 }}
+              onClick={handleSave}
+              sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}
             >
-              {saveMutation.isPending ? "Saving..." : "Save Fields"}
+              {saveMutation.isPending ? "Saving..." : "Save Signature Fields"}
             </Button>
           </Box>
-        </Paper>
+        </Box>
 
-        {/* Main Work Area: Left Sidebar + Center Scrollable PDF Canvas */}
-        <Box sx={{ flexGrow: 1, display: "flex", overflow: "hidden", borderRadius: 2, border: "1px solid rgba(0,0,0,0.08)" }}>
-          {/* Left Signer Role Drag Source Sidebar */}
+        {/* DocuSign Layout Body: Left Sidebar + Center Scrollable Canvas + Right Field Inspector */}
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            overflow: "hidden",
+            borderRadius: 2.5,
+            border: "1px solid #E5E7EB",
+            bgcolor: "#FFFFFF",
+          }}
+        >
+          {/* Left Signer Role Sidebar */}
           <SignerRoleSidebar roles={signerRoles} loading={rolesLoading} />
 
-          {/* PDF Viewer Container */}
+          {/* Center PDF Viewer Canvas Area */}
           <Box
             sx={{
               flexGrow: 1,
-              bgcolor: "#e2e8f0",
+              bgcolor: "#F1F5F9",
               overflowY: "auto",
-              p: 3,
+              p: 4,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
             }}
           >
             {docLoading || fieldsLoading || !pdfBlobUrl ? (
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 10 }}>
-                <CircularProgress size={48} sx={{ mb: 2 }} />
-                <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 600 }}>
+              <Box sx={{ textAlign: "center", pt: 12 }}>
+                <CircularProgress size={40} />
+                <Typography variant="body2" sx={{ mt: 2, fontWeight: 600, color: "#64748B" }}>
                   Loading PDF Document...
                 </Typography>
               </Box>
@@ -374,11 +381,7 @@ export const DocumentEditor: React.FC = () => {
               <Document
                 file={pdfBlobUrl}
                 onLoadSuccess={handleDocumentLoadSuccess}
-                loading={
-                  <Box sx={{ p: 6, textAlign: "center" }}>
-                    <CircularProgress size={40} />
-                  </Box>
-                }
+                loading={<CircularProgress size={40} sx={{ m: 4 }} />}
               >
                 {Array.from(new Array(numPages), (_, index) => {
                   const pageNum = index + 1;
@@ -388,6 +391,8 @@ export const DocumentEditor: React.FC = () => {
                       pageNumber={pageNum}
                       scale={scale}
                       fields={placedFields}
+                      selectedFieldId={selectedField?.tempId}
+                      onSelectField={(f) => setSelectedField(f)}
                       onAddField={handleAddField}
                       onUpdateField={handleUpdateField}
                       onDeleteField={handleDeleteField}
@@ -397,10 +402,100 @@ export const DocumentEditor: React.FC = () => {
               </Document>
             )}
           </Box>
+
+          {/* Right Field Inspector Sidebar */}
+          <Box
+            sx={{
+              width: 280,
+              minWidth: 280,
+              bgcolor: "#FFFFFF",
+              borderLeft: "1px solid #E5E7EB",
+              p: 2.5,
+              overflowY: "auto",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <SettingsOutlinedIcon sx={{ color: "#1976D2", fontSize: 20 }} />
+              <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "0.9375rem" }}>
+                Field Inspector
+              </Typography>
+            </Box>
+            <Divider sx={{ my: 1.5 }} />
+
+            {selectedField ? (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", fontWeight: 600 }}>
+                    Signer Role
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: "#1976D2" }}>
+                    {selectedField.roleName}
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", fontWeight: 600 }}>
+                    Page Assignment
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Page {selectedField.pageNumber} of {numPages}
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", fontWeight: 600 }}>
+                    Position (X / Y %)
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    X: {selectedField.xPosition}% | Y: {selectedField.yPosition}%
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", fontWeight: 600 }}>
+                    Size (Width / Height %)
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    W: {selectedField.width}% | H: {selectedField.height}%
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pt: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Required Field
+                  </Typography>
+                  <Switch
+                    checked={selectedField.required}
+                    onChange={(e) => handleUpdateField({ ...selectedField, required: e.target.checked })}
+                    size="small"
+                  />
+                </Box>
+
+                <Divider sx={{ my: 1 }} />
+
+                <Button
+                  variant="outlined"
+                  color="error"
+                  fullWidth
+                  startIcon={<DeleteOutlinedIcon />}
+                  onClick={() => handleDeleteField(selectedField.tempId)}
+                  sx={{ borderRadius: 2 }}
+                >
+                  Delete Signature Field
+                </Button>
+              </Box>
+            ) : (
+              <Box sx={{ textAlign: "center", py: 5, color: "#94A3B8" }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                  Click on any placed signature box in the PDF viewer to inspect and configure its properties.
+                </Typography>
+              </Box>
+            )}
+          </Box>
         </Box>
       </Box>
 
-      {/* Edit Details & Status Dialog */}
+      {/* Edit Name & Status Dialog */}
       {documentDetail && (
         <EditDocumentNameDialog
           open={renameDialogOpen}

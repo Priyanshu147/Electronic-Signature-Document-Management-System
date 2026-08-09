@@ -177,6 +177,24 @@ const AdminController = {
       message: "User deleted successfully.",
     });
   },
+
+  /**
+   * ===========================================================
+   * Reset Admin Password
+   * ===========================================================
+   */
+  async resetPassword(
+    req: AuthRequest,
+    res: Response
+  ) {
+    const { oldPassword, newPassword } = req.body;
+    await AdminService.resetPassword(req.user!.id, oldPassword, newPassword);
+
+    res.status(200).json({
+      success: true,
+      message: "Admin password reset successfully.",
+    });
+  },
 };
 
 export default AdminController;

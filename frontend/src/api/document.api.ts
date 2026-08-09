@@ -57,8 +57,9 @@ export const documentApi = {
     return response.data;
   },
 
-  downloadDocument: async (id: number): Promise<Blob> => {
+  downloadDocument: async (id: number, raw: boolean = false): Promise<Blob> => {
     const response = await api.get(ENDPOINTS.DOCUMENT.DOWNLOAD(id), {
+      params: raw ? { raw: "true" } : undefined,
       responseType: "blob",
     });
     return response.data;

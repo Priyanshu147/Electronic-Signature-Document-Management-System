@@ -1,13 +1,32 @@
-export type UserStatus = "Active" | "Inactive";
-
 export interface UserItem {
   id: number;
-  full_name: string;
   email: string;
-  status: UserStatus;
+  full_name: string;
+  status: "Active" | "Inactive";
   last_login?: string | null;
   created_at: string;
   updated_at?: string;
+}
+
+export interface CreateUserPayload {
+  fullName: string;
+  email: string;
+  password: string;
+  status?: "Active" | "Inactive";
+}
+
+export interface UpdateUserPayload {
+  fullName: string;
+  email: string;
+  status: "Active" | "Inactive";
+  password?: string;
+}
+
+export interface GetUsersParams {
+  page?: number;
+  limit?: number;
+  searchText?: string;
+  status?: string;
 }
 
 export interface UserListResponse {
@@ -16,24 +35,4 @@ export interface UserListResponse {
   total: number;
   page: number;
   limit: number;
-  totalPages: number;
-}
-
-export interface CreateUserPayload {
-  fullName: string;
-  email: string;
-  password: string;
-  status?: UserStatus;
-}
-
-export interface UpdateUserPayload {
-  fullName?: string;
-  email?: string;
-  status: UserStatus;
-}
-
-export interface AdminDashboardData {
-  totalUsers: number;
-  activeUsers: number;
-  inactiveUsers: number;
 }

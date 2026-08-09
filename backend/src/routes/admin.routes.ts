@@ -44,6 +44,15 @@ router.get(
   catchAsync(AdminController.profile)
 );
 
+// Reset Admin Password
+router.post(
+  "/reset-password",
+  authenticate,
+  adminOnly,
+  validateSchema(AdminValidationSchemas.resetPasswordSchema),
+  catchAsync(AdminController.resetPassword)
+);
+
 // Create User
 router.post(
   ADMIN_ROUTES.CREATE_USER,

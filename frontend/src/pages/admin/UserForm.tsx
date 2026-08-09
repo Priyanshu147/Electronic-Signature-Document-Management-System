@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -9,15 +9,11 @@ import {
   DialogActions,
   TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
-  FormHelperText,
   CircularProgress,
-  Grid,
+  Box,
 } from "@mui/material";
-import type { CreateUserPayload, UpdateUserPayload, UserItem, UserStatus } from "../../types/user.types";
+import type { CreateUserPayload, UpdateUserPayload, UserItem } from "../../types/user.types";
 
 const createUserSchema = z.object({
   fullName: z.string().min(2, "Full name is required (min 2 characters)"),
@@ -29,6 +25,12 @@ const createUserSchema = z.object({
 const updateUserSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
   email: z.string().email("Valid email address is required"),
+  password: z
+    .string()
+    .optional()
+    .refine((val) => !val || val.length >= 8, {
+      message: "Password must be at least 8 characters if provided",
+    }),
   status: z.enum(["Active", "Inactive"]),
 });
 
@@ -36,7 +38,7 @@ type FormValues = {
   fullName: string;
   email: string;
   password?: string;
-  status: UserStatus;
+  status: "Active" | "Inactive";
 };
 
 interface UserFormProps {
@@ -57,11 +59,9 @@ export const UserFormModal: React.FC<UserFormProps> = ({
   const isEditing = !!userToEdit;
 
   const {
-    register,
+    control,
     handleSubmit,
     reset,
-    setValue,
-    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(isEditing ? updateUserSchema : createUserSchema),
@@ -72,8 +72,6 @@ export const UserFormModal: React.FC<UserFormProps> = ({
       status: "Active",
     },
   });
-
-  const selectedStatus = watch("status");
 
   useEffect(() => {
     if (userToEdit) {
@@ -99,6 +97,7 @@ export const UserFormModal: React.FC<UserFormProps> = ({
         fullName: data.fullName,
         email: data.email,
         status: data.status,
+        password: data.password && data.password.trim() ? data.password : undefined,
       });
     } else {
       await onSubmit({
@@ -113,58 +112,79 @@ export const UserFormModal: React.FC<UserFormProps> = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ fontWeight: 700 }}>
-        {isEditing ? "Edit User" : "Create New User"}
+        {isEditing ? "Edit User & Password" : "Create New User"}
       </DialogTitle>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent dividers>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Full Name"
-                {...register("fullName")}
-                error={!!errors.fullName}
-                helperText={errors.fullName?.message}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Email Address"
-                type="email"
-                {...register("email")}
-                error={!!errors.email}
-                helperText={errors.email?.message}
-              />
-            </Grid>
-            {!isEditing && (
-              <Grid size={{ xs: 12 }}>
+        <DialogContent dividers sx={{ p: 3 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+            <Controller
+              name="fullName"
+              control={control}
+              render={({ field }) => (
                 <TextField
+                  {...field}
                   fullWidth
-                  label="Password"
-                  type="password"
-                  {...register("password")}
-                  error={!!errors.password}
-                  helperText={errors.password?.message}
+                  label="Full Name"
+                  placeholder="John Doe"
+                  error={!!errors.fullName}
+                  helperText={errors.fullName?.message}
                 />
-              </Grid>
-            )}
-            <Grid size={{ xs: 12 }}>
-              <FormControl fullWidth error={!!errors.status}>
-                <InputLabel id="user-status-label">Account Status</InputLabel>
-                <Select
-                  labelId="user-status-label"
+              )}
+            />
+
+            <Controller
+              name="email"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  type="email"
+                  label="Email Address"
+                  placeholder="john@company.com"
+                  error={!!errors.email}
+                  helperText={errors.email?.message}
+                />
+              )}
+            />
+
+            <Controller
+              name="password"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  type="password"
+                  label={isEditing ? "Reset Password (Optional)" : "Password"}
+                  placeholder="••••••••"
+                  error={!!errors.password}
+                  helperText={
+                    errors.password?.message ||
+                    (isEditing ? "Enter a new password only if you want to reset this user's password." : undefined)
+                  }
+                />
+              )}
+            />
+
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  select
+                  fullWidth
                   label="Account Status"
-                  value={selectedStatus || "Active"}
-                  onChange={(e) => setValue("status", e.target.value as UserStatus)}
+                  error={!!errors.status}
+                  helperText={errors.status?.message}
                 >
                   <MenuItem value="Active">Active</MenuItem>
                   <MenuItem value="Inactive">Inactive</MenuItem>
-                </Select>
-                {errors.status && <FormHelperText>{errors.status.message}</FormHelperText>}
-              </FormControl>
-            </Grid>
-          </Grid>
+                </TextField>
+              )}
+            />
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: 2.5 }}>
           <Button onClick={onClose} disabled={loading} variant="outlined" color="inherit">

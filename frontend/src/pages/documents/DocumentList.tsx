@@ -5,30 +5,41 @@ import {
   Box,
   Card,
   CardContent,
+  Typography,
+  Button,
   TextField,
+  MenuItem,
+  Select,
   FormControl,
   InputLabel,
-  Select,
-  MenuItem,
-  IconButton,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer,
+  TablePagination,
   Chip,
-  Tooltip,
+  IconButton,
+  Menu,
+  Avatar,
+  CircularProgress,
   InputAdornment,
-  Button,
+  Tooltip,
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import SearchIcon from "@mui/icons-material/Search";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import EditIcon from "@mui/icons-material/Edit";
-import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
-import DownloadIcon from "@mui/icons-material/Download";
-import DeleteIcon from "@mui/icons-material/Delete";
 import toast from "react-hot-toast";
 
 import { documentApi } from "../../api/document.api";
 import type { DocumentItem, DocumentStatus } from "../../types/document.types";
-import { PageHeader } from "../../components/common/PageHeader";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { EditDocumentNameDialog } from "../../components/forms/EditDocumentNameDialog";
 import { formatBytes, formatDate } from "../../utils/formatters";
@@ -37,7 +48,7 @@ export const DocumentList: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [page, setPage] = useState<number>(1);
+  const [page, setPage] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(10);
   const [searchText, setSearchText] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -48,11 +59,14 @@ export const DocumentList: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [docToDelete, setDocToDelete] = useState<DocumentItem | null>(null);
 
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["documents", page, pageSize, searchText, statusFilter],
+  const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null);
+  const [menuDoc, setMenuDoc] = useState<DocumentItem | null>(null);
+
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ["documents", page + 1, pageSize, searchText, statusFilter],
     queryFn: () =>
       documentApi.getDocuments({
-        page,
+        page: page + 1,
         limit: pageSize,
         searchText: searchText || undefined,
         status: statusFilter || undefined,
@@ -62,7 +76,7 @@ export const DocumentList: React.FC = () => {
   const documents = data?.documents || [];
   const totalCount = data?.pagination?.totalRecords || 0;
 
-  // Edit/Rename Document Mutation
+  // Edit Document Mutation
   const updateMutation = useMutation({
     mutationFn: ({ id, name, status }: { id: number; name: string; status?: DocumentStatus }) =>
       documentApi.updateDocument(id, name, status),
@@ -93,7 +107,7 @@ export const DocumentList: React.FC = () => {
 
   const handleDownload = async (doc: DocumentItem) => {
     try {
-      toast.loading("Preparing download...", { id: "downloading" });
+      toast.loading("Preparing PDF download...", { id: "downloading" });
       const blob = await documentApi.downloadDocument(doc.id);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -105,13 +119,13 @@ export const DocumentList: React.FC = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success("Document downloaded successfully!", { id: "downloading" });
+      toast.success("Document downloaded with signature boxes!", { id: "downloading" });
     } catch (err: any) {
       toast.error(err.message || "Failed to download document.", { id: "downloading" });
     }
   };
 
-  const getStatusChipColor = (status: DocumentStatus) => {
+  const getStatusColor = (status: DocumentStatus) => {
     switch (status) {
       case "Completed":
         return "success";
@@ -126,182 +140,69 @@ export const DocumentList: React.FC = () => {
     }
   };
 
-  const columns: GridColDef[] = [
-    {
-      field: "document_name",
-      headerName: "Document Name",
-      flex: 1.5,
-      minWidth: 180,
-    },
-    {
-      field: "uploaded_by",
-      headerName: "Uploaded By",
-      flex: 1,
-      minWidth: 140,
-    },
-    {
-      field: "created_at",
-      headerName: "Uploaded Date",
-      width: 160,
-      valueFormatter: (value: any) => formatDate(value as string),
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 140,
-      renderCell: (params: GridRenderCellParams) => (
-        <Tooltip title="Click to edit status or details">
-          <Chip
-            label={String(params.value || "")}
-            color={getStatusChipColor(params.value as DocumentStatus)}
-            size="small"
-            variant="outlined"
-            onClick={() => {
-              setDocToRename(params.row as DocumentItem);
-              setRenameDialogOpen(true);
-            }}
-            sx={{ fontWeight: 600, cursor: "pointer" }}
-          />
-        </Tooltip>
-      ),
-    },
-    {
-      field: "page_count",
-      headerName: "Pages",
-      width: 80,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "file_size",
-      headerName: "File Size",
-      width: 100,
-      valueFormatter: (value: any) => formatBytes(value as number),
-    },
-    {
-      field: "number_of_signers",
-      headerName: "Signers",
-      width: 90,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 230,
-      sortable: false,
-      filterable: false,
-      renderCell: (params: GridRenderCellParams) => {
-        const docRow = params.row as DocumentItem;
-        return (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, height: "100%" }}>
-            <Button
-              variant="contained"
-              size="small"
-              color="primary"
-              startIcon={<EditIcon />}
-              onClick={() => navigate(`/user/documents/${docRow.id}/editor`)}
-              sx={{
-                borderRadius: 1.5,
-                fontWeight: 600,
-                textTransform: "none",
-                py: 0.4,
-                px: 1.5,
-                fontSize: "0.8125rem",
-              }}
-            >
-              Edit
-            </Button>
-            <Tooltip title="Edit Document Details & Status">
-              <IconButton
-                size="small"
-                color="info"
-                onClick={() => {
-                  setDocToRename(docRow);
-                  setRenameDialogOpen(true);
-                }}
-              >
-                <DriveFileRenameOutlineIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Download PDF">
-              <IconButton
-                size="small"
-                color="success"
-                onClick={() => handleDownload(docRow)}
-              >
-                <DownloadIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete Document">
-              <IconButton
-                size="small"
-                color="error"
-                onClick={() => {
-                  setDocToDelete(docRow);
-                  setDeleteDialogOpen(true);
-                }}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        );
-      },
-    },
-  ];
-
   return (
     <Box>
-      <PageHeader
-        title="Document Management"
-        subtitle="Manage and edit your uploaded electronic signature documents"
-        actionText="Upload PDF"
-        actionIcon={<UploadFileIcon />}
-        onAction={() => navigate("/user/documents/upload")}
-      />
-
-      <Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-        <CardContent sx={{ p: 3 }}>
-          {/* Filters */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              gap: 2,
-              mb: 3,
-              justifyContent: "space-between",
-            }}
+      {/* Top Header */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: "#1F2937" }}>
+            Document Management
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            View, upload, download, and configure electronic signature fields on PDF documents
+          </Typography>
+        </Box>
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <Tooltip title="Refresh List">
+            <IconButton onClick={() => refetch()} size="small" sx={{ border: "1px solid #E5E7EB", borderRadius: 2 }}>
+              <RefreshOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<CloudUploadOutlinedIcon />}
+            onClick={() => navigate("/user/documents/upload")}
+            sx={{ borderRadius: 2 }}
           >
+            Upload PDF Document
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Main Table Card */}
+      <Card elevation={0}>
+        <CardContent sx={{ p: 3 }}>
+          {/* Filters Bar */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2 }}>
             <TextField
-              placeholder="Search document or file name..."
               size="small"
+              placeholder="Search document name..."
               value={searchText}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              onChange={(e) => {
                 setSearchText(e.target.value);
-                setPage(1);
+                setPage(0);
               }}
+              sx={{ width: 300 }}
               slotProps={{
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon color="action" />
+                      <SearchIcon sx={{ color: "#9CA3AF" }} />
                     </InputAdornment>
                   ),
                 },
               }}
-              sx={{ minWidth: 280 }}
             />
 
             <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel id="doc-status-filter-label">Filter Status</InputLabel>
+              <InputLabel>Status Filter</InputLabel>
               <Select
-                labelId="doc-status-filter-label"
-                label="Filter Status"
                 value={statusFilter}
+                label="Status Filter"
                 onChange={(e) => {
-                  setStatusFilter(e.target.value as string);
-                  setPage(1);
+                  setStatusFilter(e.target.value);
+                  setPage(0);
                 }}
               >
                 <MenuItem value="">All Statuses</MenuItem>
@@ -313,32 +214,166 @@ export const DocumentList: React.FC = () => {
             </FormControl>
           </Box>
 
-          {/* DataGrid */}
-          <Box sx={{ height: 520, width: "100%" }}>
-            <DataGrid
-              rows={documents}
-              columns={columns}
-              rowCount={totalCount}
-              loading={isLoading || isFetching}
-              paginationMode="server"
-              paginationModel={{ page: page - 1, pageSize }}
-              onPaginationModelChange={(model: GridPaginationModel) => {
-                setPage(model.page + 1);
-                setPageSize(model.pageSize);
-              }}
-              pageSizeOptions={[5, 10, 25, 50]}
-              disableRowSelectionOnClick
-              sx={{
-                border: "none",
-                "& .MuiDataGrid-cell:focus": { outline: "none" },
-                "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 700 },
-              }}
-            />
-          </Box>
+          {/* Table */}
+          <TableContainer>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Document Name</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Uploaded Date</TableCell>
+                  <TableCell align="center">Pages</TableCell>
+                  <TableCell>File Size</TableCell>
+                  <TableCell align="center">Signers</TableCell>
+                  <TableCell align="right">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {isLoading || isFetching ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
+                      <CircularProgress size={32} />
+                    </TableCell>
+                  </TableRow>
+                ) : documents.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 5, color: "text.secondary" }}>
+                      No documents match your search criteria.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  documents.map((doc: DocumentItem) => (
+                    <TableRow key={doc.id} hover>
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                          <Avatar sx={{ bgcolor: "#EFF6FF", color: "#1976D2", width: 36, height: 36, borderRadius: 2 }}>
+                            <PictureAsPdfOutlinedIcon fontSize="small" />
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {doc.document_name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Uploaded by {doc.uploaded_by || "User"}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Click to edit document status">
+                          <Chip
+                            label={doc.status}
+                            size="small"
+                            color={getStatusColor(doc.status) as any}
+                            onClick={() => {
+                              setDocToRename(doc);
+                              setRenameDialogOpen(true);
+                            }}
+                            sx={{ fontWeight: 600, cursor: "pointer" }}
+                          />
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>{formatDate(doc.created_at)}</TableCell>
+                      <TableCell align="center">{doc.page_count || 1}</TableCell>
+                      <TableCell>{formatBytes(doc.file_size)}</TableCell>
+                      <TableCell align="center">{doc.number_of_signers || 0}</TableCell>
+                      <TableCell align="right">
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 1 }}>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<EditIcon fontSize="small" />}
+                            onClick={() => navigate(`/user/documents/${doc.id}/editor`)}
+                            sx={{ borderRadius: 1.5, py: 0.5, px: 1.5 }}
+                          >
+                            Edit
+                          </Button>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              setActionMenuAnchor(e.currentTarget);
+                              setMenuDoc(doc);
+                            }}
+                          >
+                            <MoreVertIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Pagination */}
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            component="div"
+            count={totalCount}
+            rowsPerPage={pageSize}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setPageSize(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+          />
         </CardContent>
       </Card>
 
-      {/* Edit Details & Status Dialog */}
+      {/* Row Actions Dropdown Menu */}
+      <Menu
+        anchorEl={actionMenuAnchor}
+        open={Boolean(actionMenuAnchor)}
+        onClose={() => setActionMenuAnchor(null)}
+        slotProps={{ paper: { elevation: 2, sx: { minWidth: 180, borderRadius: 2 } } }}
+      >
+        <MenuItem
+          onClick={() => {
+            if (menuDoc) {
+              setDocToRename(menuDoc);
+              setRenameDialogOpen(true);
+            }
+            setActionMenuAnchor(null);
+          }}
+        >
+          <EditOutlinedIcon fontSize="small" sx={{ mr: 1.5, color: "text.secondary" }} />
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            Edit Name & Status
+          </Typography>
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            if (menuDoc) handleDownload(menuDoc);
+            setActionMenuAnchor(null);
+          }}
+        >
+          <DownloadOutlinedIcon fontSize="small" sx={{ mr: 1.5, color: "text.secondary" }} />
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            Download PDF
+          </Typography>
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            if (menuDoc) {
+              setDocToDelete(menuDoc);
+              setDeleteDialogOpen(true);
+            }
+            setActionMenuAnchor(null);
+          }}
+          sx={{ color: "error.main" }}
+        >
+          <DeleteOutlinedIcon fontSize="small" sx={{ mr: 1.5, color: "error.main" }} />
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Delete Document
+          </Typography>
+        </MenuItem>
+      </Menu>
+
+      {/* Edit Name & Status Dialog */}
       {docToRename && (
         <EditDocumentNameDialog
           open={renameDialogOpen}
@@ -352,7 +387,7 @@ export const DocumentList: React.FC = () => {
         />
       )}
 
-      {/* Delete Dialog */}
+      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
         title="Delete Document"

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import { Page } from "react-pdf";
-import { Box, Typography } from "@mui/material";
+import { Box, Chip } from "@mui/material";
 import { ITEM_TYPE_SIGNER_ROLE } from "../signer/SignerRoleSidebar";
 import { SignatureFieldBox } from "../signer/SignatureFieldBox";
 import type { PlacedSignatureField } from "../signer/SignatureFieldBox";
@@ -10,6 +10,8 @@ interface PdfPageCanvasProps {
   pageNumber: number;
   scale: number;
   fields: PlacedSignatureField[];
+  selectedFieldId?: string | null;
+  onSelectField?: (field: PlacedSignatureField | null) => void;
   onAddField: (field: Omit<PlacedSignatureField, "tempId">) => void;
   onUpdateField: (updated: PlacedSignatureField) => void;
   onDeleteField: (tempId: string) => void;
@@ -19,6 +21,8 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({
   pageNumber,
   scale,
   fields,
+  selectedFieldId,
+  onSelectField,
   onAddField,
   onUpdateField,
   onDeleteField,
@@ -79,15 +83,18 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({
         containerRef.current = node;
         if (node) drop(node);
       }}
+      onClick={() => {
+        if (onSelectField) onSelectField(null);
+      }}
       sx={{
         position: "relative",
         mb: 4,
-        boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-        borderRadius: 1,
+        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04)",
+        borderRadius: 2,
         overflow: "hidden",
-        backgroundColor: "white",
-        outline: isOver ? "3px dashed #4f46e5" : "none",
-        outlineOffset: 2,
+        bgcolor: "#FFFFFF",
+        outline: isOver ? "3px dashed #1976D2" : "none",
+        outlineOffset: "2px",
         transition: "outline 0.15s ease",
       }}
     >
@@ -100,23 +107,21 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({
         renderTextLayer={false}
       />
 
-      {/* Page Number Label */}
+      {/* Page Number Badge */}
       <Box
         sx={{
           position: "absolute",
-          top: 8,
-          right: 8,
-          bgcolor: "rgba(0,0,0,0.6)",
-          color: "white",
-          px: 1.5,
-          py: 0.5,
-          borderRadius: 1,
+          top: 12,
+          right: 12,
           pointerEvents: "none",
+          zIndex: 5,
         }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 600 }}>
-          Page {pageNumber}
-        </Typography>
+        <Chip
+          label={`Page ${pageNumber}`}
+          size="small"
+          sx={{ bgcolor: "rgba(15, 23, 42, 0.75)", color: "#FFFFFF", fontWeight: 600 }}
+        />
       </Box>
 
       {/* Placed Signature Field Overlays */}
@@ -127,6 +132,8 @@ export const PdfPageCanvas: React.FC<PdfPageCanvasProps> = ({
           scale={scale}
           pageWidth={pageSize.width}
           pageHeight={pageSize.height}
+          isSelected={selectedFieldId === field.tempId}
+          onSelect={(f) => onSelectField && onSelectField(f)}
           onUpdate={onUpdateField}
           onDelete={onDeleteField}
         />

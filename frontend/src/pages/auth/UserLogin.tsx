@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -10,18 +10,20 @@ import {
   TextField,
   Button,
   Typography,
-  CircularProgress,
+  Alert,
+  Grid,
   InputAdornment,
   IconButton,
-  Alert,
-  Container,
+  CircularProgress,
   Link,
 } from "@mui/material";
+import MailOutlinedIcon from "@mui/icons-material/MailOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import DrawOutlinedIcon from "@mui/icons-material/DrawOutlined";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import PersonIcon from "@mui/icons-material/Person";
-import EmailIcon from "@mui/icons-material/Email";
-import LockIcon from "@mui/icons-material/Lock";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useAuth } from "../../hooks/useAuth";
 
 const userLoginSchema = z.object({
@@ -32,14 +34,14 @@ const userLoginSchema = z.object({
 type UserLoginFormValues = z.infer<typeof userLoginSchema>;
 
 export const UserLogin: React.FC = () => {
-  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { userLogin } = useAuth();
   const navigate = useNavigate();
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<UserLoginFormValues>({
@@ -59,162 +61,213 @@ export const UserLogin: React.FC = () => {
         navigate("/user/dashboard");
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to log in as user");
+      setErrorMsg(err.message || "Failed to log in to user workspace.");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
-        py: 4,
-      }}
-    >
-      <Container maxWidth="xs">
-        <Card
-          sx={{
-            borderRadius: 3,
-            boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4)",
-            overflow: "hidden",
-          }}
-        >
+    <Grid container sx={{ minHeight: "100vh", bgcolor: "#F7F8FA" }}>
+      {/* Left Column - Enterprise Branding Panel */}
+      <Grid
+        size={{ xs: 0, md: 7, lg: 8 }}
+        sx={{
+          bgcolor: "#0F172A",
+          color: "#FFFFFF",
+          p: { md: 6, lg: 8 },
+          display: { xs: "none", md: "flex" },
+          flexDirection: "column",
+          justifyContent: "space-between",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Top Logo */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Box
             sx={{
-              p: 4,
-              pb: 2,
-              textAlign: "center",
-              background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-              color: "white",
+              width: 44,
+              height: 44,
+              borderRadius: "10px",
+              bgcolor: "#1976D2",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#FFF",
             }}
           >
-            <Box
-              sx={{
-                width: 60,
-                height: 60,
-                borderRadius: "50%",
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mb: 1.5,
-              }}
-            >
-              <PersonIcon sx={{ fontSize: 36, color: "white" }} />
-            </Box>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            <DrawOutlinedIcon sx={{ fontSize: 26 }} />
+          </Box>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#FFF", lineHeight: 1.2 }}>
+              E-Sign DMS
+            </Typography>
+            <Typography variant="caption" sx={{ color: "#94A3B8", letterSpacing: "1px", textTransform: "uppercase" }}>
               User Workspace
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Sign in to manage documents & signature workflows
-            </Typography>
           </Box>
+        </Box>
 
-          <CardContent sx={{ p: 4, pt: 3 }}>
-            {errorMsg && (
-              <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }}>
-                {errorMsg}
-              </Alert>
-            )}
+        {/* Hero Section */}
+        <Box sx={{ maxWidth: 560, my: 6 }}>
+          <Typography variant="h2" sx={{ fontWeight: 800, mb: 3, lineHeight: 1.25 }}>
+            Electronic Signatures & Document Workflows
+          </Typography>
+          <Typography variant="body1" sx={{ color: "#94A3B8", fontSize: "1.05rem", lineHeight: 1.6, mb: 5 }}>
+            Upload PDFs, configure custom signer roles, place drag-and-drop signature fields, and export execution-ready electronic documents seamlessly.
+          </Typography>
 
-            <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-              <TextField
-                margin="normal"
-                fullWidth
-                id="email"
-                label="Email Address"
-                autoComplete="email"
-                autoFocus
-                {...register("email")}
-                error={!!errors.email}
-                helperText={errors.email?.message}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-                sx={{ mb: 2 }}
-              />
-
-              <TextField
-                margin="normal"
-                fullWidth
-                id="password"
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                {...register("password")}
-                error={!!errors.password}
-                helperText={errors.password?.message}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockIcon color="action" />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-                sx={{ mb: 3 }}
-              />
-
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
-                disabled={submitting}
-                sx={{
-                  py: 1.5,
-                  borderRadius: 2,
-                  fontWeight: 700,
-                  fontSize: "1rem",
-                  textTransform: "none",
-                  backgroundColor: "#4f46e5",
-                  "&:hover": { backgroundColor: "#4338ca" },
-                  boxShadow: "0 4px 12px rgba(79, 70, 229, 0.4)",
-                }}
-              >
-                {submitting ? <CircularProgress size={26} color="inherit" /> : "Sign In to Workspace"}
-              </Button>
-
-              <Box sx={{ mt: 3, textAlign: "center" }}>
-                <Typography variant="body2" color="text.secondary">
-                  Administrator?{" "}
-                  <Link
-                    component={RouterLink}
-                    to="/admin/login"
-                    color="primary"
-                    sx={{ textDecoration: "none", fontWeight: 600 }}
-                  >
-                    Admin Login
-                  </Link>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+            {[
+              "Interactive drag-and-drop PDF signature field editor",
+              "Multi-signer role assignment & page positioning",
+              "Instant document export with embedded signature boxes",
+            ].map((feature, idx) => (
+              <Box key={idx} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <CheckCircleIcon sx={{ color: "#1976D2", fontSize: 20 }} />
+                <Typography variant="body1" sx={{ fontWeight: 500, color: "#E2E8F0" }}>
+                  {feature}
                 </Typography>
               </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
+            ))}
+          </Box>
+        </Box>
+
+        {/* Footer */}
+        <Typography variant="caption" sx={{ color: "#64748B" }}>
+          © 2026 eSign Document Management System. All rights reserved.
+        </Typography>
+      </Grid>
+
+      {/* Right Column - Login Form Panel */}
+      <Grid
+        size={{ xs: 12, md: 5, lg: 4 }}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 3,
+        }}
+      >
+        <Box sx={{ width: "100%", maxWidth: 420 }}>
+          <Card
+            elevation={0}
+            sx={{
+              borderRadius: 3,
+              border: "1px solid #E5E7EB",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05)",
+            }}
+          >
+            <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+              <Box sx={{ mb: 3.5 }}>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: "#1F2937", mb: 0.5 }}>
+                  User Workspace Sign In
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Enter your credentials to access your document workspace
+                </Typography>
+              </Box>
+
+              {errorMsg && (
+                <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                  {errorMsg}
+                </Alert>
+              )}
+
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+                  <Controller
+                    name="email"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        label="Email Address"
+                        placeholder="user@esign.com"
+                        error={!!errors.email}
+                        helperText={errors.email?.message}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <MailOutlinedIcon sx={{ color: "#9CA3AF" }} />
+                              </InputAdornment>
+                            ),
+                          },
+                        }}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    name="password"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        type={showPassword ? "text" : "password"}
+                        label="Password"
+                        placeholder="••••••••"
+                        error={!!errors.password}
+                        helperText={errors.password?.message}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <LockOutlinedIcon sx={{ color: "#9CA3AF" }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          },
+                        }}
+                      />
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    disabled={submitting}
+                    endIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <ArrowForwardIcon />}
+                    sx={{
+                      py: 1.5,
+                      mt: 1,
+                      borderRadius: 2,
+                      fontWeight: 600,
+                      fontSize: "0.9375rem",
+                    }}
+                  >
+                    Sign In to Workspace
+                  </Button>
+
+                  <Box sx={{ textAlign: "center", mt: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      System administrator?{" "}
+                      <Link
+                        component={RouterLink}
+                        to="/admin/login"
+                        sx={{ color: "#1976D2", fontWeight: 600, textDecoration: "none" }}
+                      >
+                        Switch to Admin Login
+                      </Link>
+                    </Typography>
+                  </Box>
+                </Box>
+              </form>
+            </CardContent>
+          </Card>
+        </Box>
+      </Grid>
+    </Grid>
   );
 };

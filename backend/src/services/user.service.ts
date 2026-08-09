@@ -32,7 +32,7 @@ const UserService = {
                 email,
                 password
             FROM ${TABLES.USER}
-            WHERE email = ?
+            WHERE email = ? AND status = 'Active'
             LIMIT 1
         `;
         const [rows]: any = await db.query(query, [email]);
@@ -104,7 +104,55 @@ const UserService = {
         return rows[0];
     },
 
-    
+    /**
+     * ===========================================================
+     * Reset User Password
+     * ===========================================================
+     */
+    async resetPassword(
+        userId: number,
+        oldPassword: string,
+        newPassword: string
+    ) {
+        const query = `
+            SELECT id, password
+            FROM ${TABLES.USER}
+            WHERE id = ?
+            LIMIT 1
+        `;
+        const [rows]: any = await db.query(query, [userId]);
+        if (rows.length === 0) {
+            throw new APIError(
+                ERROR_MESSAGES.USER_NOT_FOUND,
+                httpStatus.NOT_FOUND
+            );
+        }
+
+        const user = rows[0];
+        const isOldPasswordCorrect = await comparePassword(
+            oldPassword,
+            user.password
+        );
+
+        if (!isOldPasswordCorrect) {
+            throw new APIError(
+                ERROR_MESSAGES.INVALID_PASSWORD,
+                httpStatus.BAD_REQUEST
+            );
+        }
+
+        const newPasswordHash = await hashPassword(newPassword);
+        await db.query(
+            `
+            UPDATE ${TABLES.USER}
+            SET password = ?
+            WHERE id = ?
+            `,
+            [newPasswordHash, userId]
+        );
+
+        return { success: true };
+    },
 };
 
 export default UserService;

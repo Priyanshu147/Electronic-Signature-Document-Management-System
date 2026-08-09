@@ -325,10 +325,10 @@ const AdminService = {
       fullName: string;
       email: string;
       status: string;
+      password?: string;
     }
   ) {
-    const { fullName, email, status } =
-      userData;
+    const { fullName, email, status, password } = userData;
 
     const [existing]: any = await db.query(
       `
@@ -348,28 +348,46 @@ const AdminService = {
       );
     }
 
-    const [result]: any = await db.query(
-      `
-    UPDATE ${TABLES.USER}
-    SET
-      full_name = ?,
-      email = ?,
-      status = ?
-    WHERE id = ?
-    `,
-      [
-        fullName,
-        email,
-        status,
-        id,
-      ]
-    );
-
-    if (!result.affectedRows) {
-      throw new APIError(
-        ERROR_MESSAGES.USER_NOT_FOUND,
-        httpStatus.NOT_FOUND
+    if (password && password.trim().length >= 8) {
+      const passwordHash = await hashPassword(password);
+      const [result]: any = await db.query(
+        `
+      UPDATE ${TABLES.USER}
+      SET
+        full_name = ?,
+        email = ?,
+        status = ?,
+        password = ?
+      WHERE id = ?
+      `,
+        [fullName, email, status, passwordHash, id]
       );
+
+      if (!result.affectedRows) {
+        throw new APIError(
+          ERROR_MESSAGES.USER_NOT_FOUND,
+          httpStatus.NOT_FOUND
+        );
+      }
+    } else {
+      const [result]: any = await db.query(
+        `
+      UPDATE ${TABLES.USER}
+      SET
+        full_name = ?,
+        email = ?,
+        status = ?
+      WHERE id = ?
+      `,
+        [fullName, email, status, id]
+      );
+
+      if (!result.affectedRows) {
+        throw new APIError(
+          ERROR_MESSAGES.USER_NOT_FOUND,
+          httpStatus.NOT_FOUND
+        );
+      }
     }
 
     return this.getUserById(id);
@@ -399,7 +417,55 @@ const AdminService = {
       success: true,
     };
   },
-};
+  /**
+   * ===========================================================
+   * Reset Admin Password
+   * ===========================================================
+   */
+  async resetPassword(
+    adminId: number,
+    oldPassword: string,
+    newPassword: string
+  ) {
+    const query = `
+      SELECT id, password_hash
+      FROM ${TABLES.ADMIN}
+      WHERE id = ?
+      LIMIT 1
+    `;
+    const [rows]: any = await db.query(query, [adminId]);
+    if (rows.length === 0) {
+      throw new APIError(
+        ERROR_MESSAGES.ADMIN_NOT_FOUND,
+        httpStatus.NOT_FOUND
+      );
+    }
 
+    const admin = rows[0];
+    const isOldPasswordCorrect = await comparePassword(
+      oldPassword,
+      admin.password_hash
+    );
+
+    if (!isOldPasswordCorrect) {
+      throw new APIError(
+        ERROR_MESSAGES.INVALID_PASSWORD,
+        httpStatus.BAD_REQUEST
+      );
+    }
+
+    const newPasswordHash = await hashPassword(newPassword);
+    await db.query(
+      `
+      UPDATE ${TABLES.ADMIN}
+      SET password_hash = ?
+      WHERE id = ?
+      `,
+      [newPasswordHash, adminId]
+    );
+
+    return { success: true };
+  },
+};
 
 export default AdminService;
