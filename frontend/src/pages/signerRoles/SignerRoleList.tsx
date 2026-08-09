@@ -45,8 +45,10 @@ export const SignerRoleList: React.FC = () => {
   const [menuRole, setMenuRole] = useState<SignerRoleItem | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["signerRolesList"],
+    queryKey: ["signerRoles"],
     queryFn: () => signerRoleApi.getSignerRoles(),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const roles = data?.data || [];
@@ -57,7 +59,7 @@ export const SignerRoleList: React.FC = () => {
     onSuccess: () => {
       toast.success("Signer role created successfully!");
       setFormOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["signerRolesList"] });
+      queryClient.invalidateQueries({ queryKey: ["signerRoles"] });
       queryClient.invalidateQueries({ queryKey: ["userSignerRolesSummary"] });
     },
     onError: (err: any) => {
@@ -73,7 +75,7 @@ export const SignerRoleList: React.FC = () => {
       toast.success("Signer role updated successfully!");
       setFormOpen(false);
       setSelectedRole(null);
-      queryClient.invalidateQueries({ queryKey: ["signerRolesList"] });
+      queryClient.invalidateQueries({ queryKey: ["signerRoles"] });
       queryClient.invalidateQueries({ queryKey: ["userSignerRolesSummary"] });
     },
     onError: (err: any) => {
@@ -88,7 +90,7 @@ export const SignerRoleList: React.FC = () => {
       toast.success("Signer role deleted successfully!");
       setDeleteDialogOpen(false);
       setRoleToDelete(null);
-      queryClient.invalidateQueries({ queryKey: ["signerRolesList"] });
+      queryClient.invalidateQueries({ queryKey: ["signerRoles"] });
       queryClient.invalidateQueries({ queryKey: ["userSignerRolesSummary"] });
     },
     onError: (err: any) => {

@@ -16,11 +16,8 @@ import {
   Menu,
   MenuItem,
   Divider,
-  InputBase,
-  Badge,
   Breadcrumbs,
   Link,
-  Tooltip,
 } from "@mui/material";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
@@ -29,8 +26,6 @@ import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import MenuIcon from "@mui/icons-material/Menu";
 import MenuOpenIcon from "@mui/icons-material/MenuOpen";
-import SearchIcon from "@mui/icons-material/Search";
-import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import toast from "react-hot-toast";
 
 import { useAuth } from "../hooks/useAuth";

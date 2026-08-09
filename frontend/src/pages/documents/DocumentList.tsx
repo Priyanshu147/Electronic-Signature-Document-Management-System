@@ -42,6 +42,7 @@ import { documentApi } from "../../api/document.api";
 import type { DocumentItem, DocumentStatus } from "../../types/document.types";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { EditDocumentNameDialog } from "../../components/forms/EditDocumentNameDialog";
+import { useDebounce } from "../../hooks/useDebounce";
 import { formatBytes, formatDate } from "../../utils/formatters";
 
 export const DocumentList: React.FC = () => {
@@ -50,7 +51,8 @@ export const DocumentList: React.FC = () => {
 
   const [page, setPage] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [searchText, setSearchText] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const debouncedSearchText = useDebounce(searchInput, 400);
   const [statusFilter, setStatusFilter] = useState<string>("");
 
   const [renameDialogOpen, setRenameDialogOpen] = useState<boolean>(false);
@@ -63,12 +65,12 @@ export const DocumentList: React.FC = () => {
   const [menuDoc, setMenuDoc] = useState<DocumentItem | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["documents", page + 1, pageSize, searchText, statusFilter],
+    queryKey: ["documents", page + 1, pageSize, debouncedSearchText, statusFilter],
     queryFn: () =>
       documentApi.getDocuments({
         page: page + 1,
         limit: pageSize,
-        searchText: searchText || undefined,
+        searchText: debouncedSearchText || undefined,
         status: statusFilter || undefined,
       }),
   });
@@ -178,9 +180,9 @@ export const DocumentList: React.FC = () => {
             <TextField
               size="small"
               placeholder="Search document name..."
-              value={searchText}
+              value={searchInput}
               onChange={(e) => {
-                setSearchText(e.target.value);
+                setSearchInput(e.target.value);
                 setPage(0);
               }}
               sx={{ width: 300 }}
@@ -219,31 +221,33 @@ export const DocumentList: React.FC = () => {
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell>Document Name</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Uploaded Date</TableCell>
-                  <TableCell align="center">Pages</TableCell>
-                  <TableCell>File Size</TableCell>
-                  <TableCell align="center">Signers</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Document Name</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Uploaded By</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Uploaded Date</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>Pages</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>File Size</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>Signers</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {isLoading || isFetching ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
+                    <TableCell colSpan={8} align="center" sx={{ py: 5 }}>
                       <CircularProgress size={32} />
                     </TableCell>
                   </TableRow>
                 ) : documents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 5, color: "text.secondary" }}>
+                    <TableCell colSpan={8} align="center" sx={{ py: 5, color: "text.secondary" }}>
                       No documents match your search criteria.
                     </TableCell>
                   </TableRow>
                 ) : (
                   documents.map((doc: DocumentItem) => (
                     <TableRow key={doc.id} hover>
+                      {/* Document Name */}
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                           <Avatar sx={{ bgcolor: "#EFF6FF", color: "#1976D2", width: 36, height: 36, borderRadius: 2 }}>
@@ -253,12 +257,28 @@ export const DocumentList: React.FC = () => {
                             <Typography variant="body2" sx={{ fontWeight: 600 }}>
                               {doc.document_name}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              Uploaded by {doc.uploaded_by || "User"}
-                            </Typography>
+                            {doc.original_file_name && (
+                              <Typography variant="caption" color="text.secondary">
+                                {doc.original_file_name}
+                              </Typography>
+                            )}
                           </Box>
                         </Box>
                       </TableCell>
+
+                      {/* Dedicated Uploaded By Column */}
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Avatar sx={{ bgcolor: "#F3F4F6", color: "#4B5563", width: 28, height: 28, fontSize: "0.75rem", fontWeight: 600 }}>
+                            {(doc.uploaded_by || "U").charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Typography variant="body2" sx={{ fontWeight: 500, color: "#374151" }}>
+                            {doc.uploaded_by || "System User"}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+
+                      {/* Status */}
                       <TableCell>
                         <Tooltip title="Click to edit document status">
                           <Chip
@@ -273,6 +293,7 @@ export const DocumentList: React.FC = () => {
                           />
                         </Tooltip>
                       </TableCell>
+
                       <TableCell>{formatDate(doc.created_at)}</TableCell>
                       <TableCell align="center">{doc.page_count || 1}</TableCell>
                       <TableCell>{formatBytes(doc.file_size)}</TableCell>
@@ -318,6 +339,9 @@ export const DocumentList: React.FC = () => {
               setPageSize(parseInt(e.target.value, 10));
               setPage(0);
             }}
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}–${to} of ${count} documents (Page ${page + 1} of ${Math.ceil(count / pageSize) || 1})`
+            }
           />
         </CardContent>
       </Card>

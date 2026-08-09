@@ -37,6 +37,7 @@ import toast from "react-hot-toast";
 import { adminApi } from "../../api/admin.api";
 import type { CreateUserPayload, UpdateUserPayload, UserItem } from "../../types/user.types";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
+import { useDebounce } from "../../hooks/useDebounce";
 import { formatDate } from "../../utils/formatters";
 import { UserFormModal } from "./UserForm";
 
@@ -44,7 +45,8 @@ export const Users: React.FC = () => {
   const queryClient = useQueryClient();
   const [page, setPage] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [searchText, setSearchText] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const debouncedSearchText = useDebounce(searchInput, 400);
   const [statusFilter, setStatusFilter] = useState<string>("");
 
   const [formOpen, setFormOpen] = useState<boolean>(false);
@@ -57,12 +59,12 @@ export const Users: React.FC = () => {
   const [menuUser, setMenuUser] = useState<UserItem | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["users", page + 1, pageSize, searchText, statusFilter],
+    queryKey: ["users", page + 1, pageSize, debouncedSearchText, statusFilter],
     queryFn: () =>
       adminApi.getUsers({
         page: page + 1,
         limit: pageSize,
-        searchText: searchText || undefined,
+        searchText: debouncedSearchText || undefined,
         status: statusFilter || undefined,
       }),
   });
@@ -185,9 +187,9 @@ export const Users: React.FC = () => {
             <TextField
               size="small"
               placeholder="Search by name or email..."
-              value={searchText}
+              value={searchInput}
               onChange={(e) => {
-                setSearchText(e.target.value);
+                setSearchInput(e.target.value);
                 setPage(0);
               }}
               sx={{ width: 300 }}
@@ -304,6 +306,9 @@ export const Users: React.FC = () => {
               setPageSize(parseInt(e.target.value, 10));
               setPage(0);
             }}
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}–${to} of ${count} users (Page ${page + 1} of ${Math.ceil(count / pageSize) || 1})`
+            }
           />
         </CardContent>
       </Card>

@@ -7,12 +7,10 @@ import {
   CardContent,
   Chip,
   Skeleton,
-  Alert,
   Avatar,
 } from "@mui/material";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import type { SignerRoleItem } from "../../types/signerRole.types";
 
 export const ITEM_TYPE_SIGNER_ROLE = "SIGNER_ROLE";
@@ -102,13 +100,13 @@ export const SignerRoleSidebar: React.FC<SignerRoleSidebarProps> = ({
         Drag any role below onto a PDF page canvas to place a signature box.
       </Typography>
 
-      <Alert
+    {/*   <Alert
         icon={<InfoOutlinedIcon fontSize="small" />}
         severity="info"
         sx={{ mb: 2.5, borderRadius: 2, "& .MuiAlert-message": { fontSize: "0.8125rem" } }}
       >
         Select a role, drag it over the PDF page, and release to assign signature placement.
-      </Alert>
+      </Alert> */}
 
       {loading ? (
         <Box>

@@ -21,17 +21,14 @@ import {
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
-import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import { useAuth } from "../../hooks/useAuth";
 import { documentApi } from "../../api/document.api";
 import { signerRoleApi } from "../../api/signerRole.api";
 import { formatDate } from "../../utils/formatters";
 import type { DocumentItem } from "../../types/document.types";
 
 export const UserDashboard: React.FC = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const { data: docsData, isLoading: docsLoading } = useQuery({
@@ -64,7 +61,7 @@ export const UserDashboard: React.FC = () => {
   return (
     <Box>
       {/* Top Banner Card */}
-      <Card
+      {/* <Card
         elevation={0}
         sx={{
           mb: 3.5,
@@ -132,7 +129,7 @@ export const UserDashboard: React.FC = () => {
             </Button>
           </Box>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Summary Cards */}
       <Grid container spacing={2.5} sx={{ mb: 4 }}>

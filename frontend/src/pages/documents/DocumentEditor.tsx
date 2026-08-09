@@ -13,8 +13,6 @@ import {
   IconButton,
   Tooltip,
   Alert,
-  Switch,
-  Divider,
   TextField,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -25,8 +23,6 @@ import SaveIcon from "@mui/icons-material/Save";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import toast from "react-hot-toast";
 
 import { documentApi } from "../../api/document.api";
@@ -70,6 +66,8 @@ export const DocumentEditor: React.FC = () => {
   const { data: rolesData, isLoading: rolesLoading } = useQuery({
     queryKey: ["signerRoles"],
     queryFn: () => signerRoleApi.getSignerRoles(),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   // Fetch Existing Signature Fields
@@ -404,7 +402,7 @@ export const DocumentEditor: React.FC = () => {
           </Box>
 
           {/* Right Field Inspector Sidebar */}
-          <Box
+          {/* <Box
             sx={{
               width: 280,
               minWidth: 280,
@@ -491,7 +489,7 @@ export const DocumentEditor: React.FC = () => {
                 </Typography>
               </Box>
             )}
-          </Box>
+          </Box> */}
         </Box>
       </Box>
 
