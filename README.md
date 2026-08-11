@@ -77,6 +77,33 @@ The application follows a **Decoupled Client-Server Architecture**:
 
 ---
 
+## 📁 Folder Structure
+
+```text
+Electronic-Signature-Document-Management-System/
+├── backend/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── schemas/
+│   │   ├── middlewares/
+│   │   └── utils/
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   ├── context/
+│   │   └── api/
+│   └── package.json
+├── DATABASE_SCHEMA.md
+└── README.md
+```
+
+---
+
 ## ✨ Core Functional Features
 
 ### 1. Document Management & Server-Side Sorting
@@ -103,76 +130,9 @@ The application follows a **Decoupled Client-Server Architecture**:
 
 ---
 
-## 🗄 Database Architecture & Schema
+## 🗄 Database Schema
 
-The application uses MySQL relational database with foreign key constraints.
-
-### 1. `users` Table
-Stores registered platform users and administrative accounts.
-```sql
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  full_name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL,
-  role ENUM('admin', 'user') DEFAULT 'user',
-  status ENUM('Active', 'Inactive') DEFAULT 'Active',
-  last_login DATETIME NULL,
-  is_deleted TINYINT(1) DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
-
-### 2. `documents` Table
-Stores uploaded PDF document metadata.
-```sql
-CREATE TABLE documents (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  uploaded_by INT NOT NULL,
-  document_name VARCHAR(255) NOT NULL,
-  original_file_name VARCHAR(255) NOT NULL,
-  stored_file_name VARCHAR(255) NOT NULL,
-  file_path VARCHAR(500) NOT NULL,
-  file_size INT NOT NULL,
-  page_count INT DEFAULT 1,
-  status ENUM('Draft', 'In Progress', 'Completed', 'Archived') DEFAULT 'Draft',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE
-);
-```
-
-### 3. `signer_roles` Table
-Defines reusable signing roles across documents.
-```sql
-CREATE TABLE signer_roles (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  role_name VARCHAR(100) NOT NULL UNIQUE,
-  description TEXT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
-
-### 4. `document_signature_fields` Table
-Stores coordinates and properties of placed signature boxes on PDF pages.
-```sql
-CREATE TABLE document_signature_fields (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  document_id INT NOT NULL,
-  signer_role_id INT NOT NULL,
-  page_number INT NOT NULL DEFAULT 1,
-  x_position FLOAT NOT NULL,
-  y_position FLOAT NOT NULL,
-  width FLOAT NOT NULL DEFAULT 150.0,
-  height FLOAT NOT NULL DEFAULT 50.0,
-  required TINYINT(1) DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
-  FOREIGN KEY (signer_role_id) REFERENCES signer_roles(id) ON DELETE CASCADE
-);
-```
+The database structure and table relationships are documented in [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md).
 
 ---
 
