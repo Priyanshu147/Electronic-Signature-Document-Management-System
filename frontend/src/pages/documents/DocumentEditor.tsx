@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DndProvider } from "react-dnd";
@@ -50,6 +50,10 @@ export const DocumentEditor: React.FC = () => {
   const [placedFields, setPlacedFields] = useState<PlacedSignatureField[]>([]);
   const [selectedField, setSelectedField] = useState<PlacedSignatureField | null>(null);
   const [renameDialogOpen, setRenameDialogOpen] = useState<boolean>(false);
+
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const isProgrammaticScrollRef = useRef<boolean>(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch Document Details
   const {
@@ -191,10 +195,58 @@ export const DocumentEditor: React.FC = () => {
     await saveMutation.mutateAsync(payload);
   };
 
+  // Scroll listener to update active page number dynamically as PDF is scrolled
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || numPages === 0) return;
+
+    const handleScroll = () => {
+      if (isProgrammaticScrollRef.current) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const containerTop = containerRect.top;
+      const containerHeight = containerRect.height;
+      const targetY = containerTop + Math.min(150, containerHeight / 3);
+
+      let activePage = 1;
+      let minDistance = Infinity;
+
+      for (let i = 1; i <= numPages; i++) {
+        const pageEl = document.getElementById(`pdf-page-${i}`);
+        if (pageEl) {
+          const pageRect = pageEl.getBoundingClientRect();
+          if (pageRect.top <= targetY && pageRect.bottom >= containerTop) {
+            activePage = i;
+            break;
+          }
+          const distance = Math.abs(pageRect.top - targetY);
+          if (distance < minDistance) {
+            minDistance = distance;
+            activePage = i;
+          }
+        }
+      }
+
+      setCurrentPage((prev) => (prev !== activePage ? activePage : prev));
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [numPages]);
+
   const handlePageJump = (page: number) => {
     if (page >= 1 && page <= numPages) {
       setCurrentPage(page);
+      isProgrammaticScrollRef.current = true;
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
       document.getElementById(`pdf-page-${page}`)?.scrollIntoView({ behavior: "smooth" });
+      scrollTimeoutRef.current = setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 600);
     }
   };
 
@@ -358,6 +410,7 @@ export const DocumentEditor: React.FC = () => {
 
           {/* Center PDF Viewer Canvas Area */}
           <Box
+            ref={scrollContainerRef}
             sx={{
               flexGrow: 1,
               bgcolor: "#F1F5F9",

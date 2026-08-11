@@ -42,7 +42,7 @@ The application follows a **Decoupled Client-Server Architecture**:
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │                                 DATABASE & STORAGE                               │
 │  ┌─────────────────────────────────────────┐   ┌──────────────────────────────┐  │
-│  │ MySQL 8.x (Users, Documents, Signers)  │   │ Local Uploads Directory      │  │
+│  │ MySQL 8.x (Users, Documents, Signers)   │   │ Local Uploads Directory      │  │
 │  └─────────────────────────────────────────┘   └──────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
