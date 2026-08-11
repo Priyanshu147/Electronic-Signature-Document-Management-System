@@ -83,22 +83,123 @@ The application follows a **Decoupled Client-Server Architecture**:
 Electronic-Signature-Document-Management-System/
 ├── backend/
 │   ├── src/
+│   │   ├── config/
+│   │   │   ├── db.ts
+│   │   │   └── multerConfig.ts
 │   │   ├── controllers/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── schemas/
+│   │   │   ├── admin.controller.ts
+│   │   │   ├── document.controller.ts
+│   │   │   ├── signerRole.controller.ts
+│   │   │   └── user.controller.ts
+│   │   ├── errors/
+│   │   │   └── APIError.ts
 │   │   ├── middlewares/
-│   │   └── utils/
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
+│   │   │   ├── auth.middleware.ts
+│   │   │   ├── authenticate.ts
+│   │   │   ├── catchAsync.ts
+│   │   │   ├── catchError.ts
+│   │   │   ├── general.ts
+│   │   │   └── validateSchema.ts
 │   │   ├── routes/
+│   │   │   ├── admin.routes.ts
+│   │   │   ├── document.routes.ts
+│   │   │   ├── signerRole.routes.ts
+│   │   │   └── user.routes.ts
+│   │   ├── schemas/
+│   │   │   ├── admin.schema.ts
+│   │   │   ├── document.schema.ts
+│   │   │   ├── signerRole.schema.ts
+│   │   │   └── user.schema.ts
+│   │   ├── services/
+│   │   │   ├── admin.service.ts
+│   │   │   ├── document.service.ts
+│   │   │   ├── signerRole.service.ts
+│   │   │   └── user.service.ts
+│   │   ├── utils/
+│   │   │   ├── constants.ts
+│   │   │   └── helper.ts
+│   │   ├── app.ts
+│   │   └── server.ts
+│   ├── uploads/
+│   ├── package.json
+│   └── tsconfig.json
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── api/
+│   │   │   ├── admin.api.ts
+│   │   │   ├── auth.api.ts
+│   │   │   ├── axios.ts
+│   │   │   ├── document.api.ts
+│   │   │   ├── signerRole.api.ts
+│   │   │   └── user.api.ts
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── common/
+│   │   │   │   ├── ConfirmDialog.tsx
+│   │   │   │   ├── EmptyState.tsx
+│   │   │   │   ├── LoadingSkeleton.tsx
+│   │   │   │   └── PageHeader.tsx
+│   │   │   ├── forms/
+│   │   │   │   ├── EditDocumentNameDialog.tsx
+│   │   │   │   └── ResetPasswordDialog.tsx
+│   │   │   ├── pdf/
+│   │   │   │   └── PdfPageCanvas.tsx
+│   │   │   └── signer/
+│   │   │       ├── SignatureFieldBox.tsx
+│   │   │       └── SignerRoleSidebar.tsx
+│   │   ├── constants/
+│   │   │   ├── apiEndpoints.ts
+│   │   │   └── appConstants.ts
 │   │   ├── context/
-│   │   └── api/
-│   └── package.json
+│   │   │   └── AuthContext.tsx
+│   │   ├── hooks/
+│   │   │   ├── useAuth.ts
+│   │   │   └── useDebounce.ts
+│   │   ├── layouts/
+│   │   │   ├── AdminLayout.tsx
+│   │   │   └── UserLayout.tsx
+│   │   ├── pages/
+│   │   │   ├── admin/
+│   │   │   │   ├── Dashboard.tsx
+│   │   │   │   ├── UserForm.tsx
+│   │   │   │   └── Users.tsx
+│   │   │   ├── auth/
+│   │   │   │   ├── AdminLogin.tsx
+│   │   │   │   └── UserLogin.tsx
+│   │   │   ├── documents/
+│   │   │   │   ├── DocumentEditor.tsx
+│   │   │   │   ├── DocumentList.tsx
+│   │   │   │   └── UploadDocument.tsx
+│   │   │   ├── signerRoles/
+│   │   │   │   ├── SignerRoleForm.tsx
+│   │   │   │   └── SignerRoleList.tsx
+│   │   │   └── user/
+│   │   │       └── Dashboard.tsx
+│   │   ├── routes/
+│   │   │   ├── AppRoutes.tsx
+│   │   │   └── ProtectedRoute.tsx
+│   │   ├── theme/
+│   │   │   └── theme.ts
+│   │   ├── types/
+│   │   │   ├── auth.types.ts
+│   │   │   ├── document.types.ts
+│   │   │   ├── signerRole.types.ts
+│   │   │   └── user.types.ts
+│   │   ├── utils/
+│   │   │   └── formatters.ts
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── index.css
+│   │   └── main.tsx
+│   ├── index.html
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── vite.config.ts
+├── API.md
 ├── DATABASE_SCHEMA.md
+├── eSign_API_Specification.docx
+├── eSign_Database_Documentation.docx
 └── README.md
 ```
 
