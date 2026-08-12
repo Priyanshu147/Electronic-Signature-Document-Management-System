@@ -110,23 +110,55 @@ const SignerRoleService = {
      * ===========================================================
      */
     async deleteSignerRole(id: number) {
-        const query = `
-            DELETE FROM ${TABLES.SIGNER_ROLE}
-            WHERE id = ?
-        `;
-        const [result]: any = await db.query(query
-            , [id]);
-        if (result.affectedRows === 0) {
+        // Check if signer role exists
+        await this.getSignerRoleById(id);
+
+        // Check if role is assigned to any document signature fields
+        const [checkRows]: any = await db.query(
+            `SELECT COUNT(*) AS count FROM ${TABLES.DOCUMENT_SIGNER_FIELDS} WHERE signer_role_id = ?`,
+            [id]
+        );
+
+        if (checkRows && checkRows[0]?.count > 0) {
             throw new APIError(
-                ERROR_MESSAGES.RESOURCE_NOT_FOUND,
-                httpStatus.NOT_FOUND
+                ERROR_MESSAGES.SIGNER_ROLE_IN_USE,
+                httpStatus.CONFLICT
             );
         }
 
-        return {
-            success: true,
-            message: "Signer role deleted successfully.",
-        };
+        try {
+            const query = `
+                DELETE FROM ${TABLES.SIGNER_ROLE}
+                WHERE id = ?
+            `;
+            const [result]: any = await db.query(query, [id]);
+            if (result.affectedRows === 0) {
+                throw new APIError(
+                    ERROR_MESSAGES.RESOURCE_NOT_FOUND,
+                    httpStatus.NOT_FOUND
+                );
+            }
+
+            return {
+                success: true,
+                message: "Signer role deleted successfully.",
+            };
+        } catch (err: any) {
+            if (err instanceof APIError) {
+                throw err;
+            }
+            if (
+                err.code === "ER_ROW_IS_REFERENCED_2" ||
+                err.code === "ER_ROW_IS_REFERENCED" ||
+                err.errno === 1451
+            ) {
+                throw new APIError(
+                    ERROR_MESSAGES.SIGNER_ROLE_IN_USE,
+                    httpStatus.CONFLICT
+                );
+            }
+            throw err;
+        }
     }
 
 };

@@ -263,6 +263,8 @@ export const ERROR_MESSAGES = {
     INTERNAL_SERVER_ERROR: "Internal server error.",
 
     RESOURCE_NOT_FOUND: "Resource not found.",
+
+    SIGNER_ROLE_IN_USE: "Cannot delete this signer role because it is currently assigned to one or more document signature fields.",
 };
 
 /* ===========================================================

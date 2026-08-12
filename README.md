@@ -9,7 +9,9 @@ The platform empowers organizations to securely upload PDF documents, define cus
 ## 📐 System Architecture & Overview
 
 ### Architectural Pattern
+
 The application follows a **Decoupled Client-Server Architecture**:
+
 - **Frontend SPA**: Vite + React 18 single-page application using TanStack React Query v5 for asynchronous state synchronization and optimistic UI updates.
 - **Backend REST API**: Express 5 service structured in a 3-tier Layered Architecture (**Controllers -> Services -> Database Access / Utilities**).
 - **Database Layer**: Relational MySQL 8.x database utilizing connection pooling (`mysql2`) and transaction-safe operations.
@@ -52,28 +54,30 @@ The application follows a **Decoupled Client-Server Architecture**:
 ## 🛠 Tech Stack & Dependencies
 
 ### Frontend Technologies
-| Layer | Tech Stack | Description |
-| :--- | :--- | :--- |
-| **Framework** | React 18 + TypeScript | Component-driven UI architecture |
-| **Build Tool** | Vite | Lightning-fast module bundling & HMR |
-| **UI Component Library** | Material-UI (MUI v5) | Enterprise-grade styled components |
-| **Data Fetching & Cache** | TanStack React Query v5 | Server state management & cache invalidation |
-| **Form Handling** | React Hook Form | Performant form state management |
-| **Schema Validation** | Zod + `@hookform/resolvers` | Strict client-side data validation |
-| **PDF Rendering** | `react-pdf` / `pdfjs-dist` | Canvas-based multi-page PDF rendering |
-| **HTTP Client** | Axios | Request interceptors, Bearer token attachment, credentials support |
-| **Notifications** | `react-hot-toast` | Toast notification alerts |
+
+| Layer                           | Tech Stack                     | Description                                                        |
+| :------------------------------ | :----------------------------- | :----------------------------------------------------------------- |
+| **Framework**             | React 18 + TypeScript          | Component-driven UI architecture                                   |
+| **Build Tool**            | Vite                           | Lightning-fast module bundling & HMR                               |
+| **UI Component Library**  | Material-UI (MUI v5)           | Enterprise-grade styled components                                 |
+| **Data Fetching & Cache** | TanStack React Query v5        | Server state management & cache invalidation                       |
+| **Form Handling**         | React Hook Form                | Performant form state management                                   |
+| **Schema Validation**     | Zod +`@hookform/resolvers`   | Strict client-side data validation                                 |
+| **PDF Rendering**         | `react-pdf` / `pdfjs-dist` | Canvas-based multi-page PDF rendering                              |
+| **HTTP Client**           | Axios                          | Request interceptors, Bearer token attachment, credentials support |
+| **Notifications**         | `react-hot-toast`            | Toast notification alerts                                          |
 
 ### Backend Technologies
-| Layer | Tech Stack | Description |
-| :--- | :--- | :--- |
-| **Runtime & Framework** | Node.js + Express 5 + TypeScript | Non-blocking I/O web server |
-| **Execution Engine** | `tsx` | TypeScript execution and live watching |
-| **Database Driver** | `mysql2` | Promise-based MySQL connection pool driver |
-| **Security & Auth** | `jsonwebtoken`, `bcrypt`, `helmet`, `cors` | Token verification, password hashing, security headers |
-| **File Processing** | `multer` | Disk-storage handling for PDF uploads |
-| **PDF Manipulation** | `pdf-lib` | Server-side PDF modification & signature box stamping |
-| **Validation** | Zod | Strict runtime request body and query validation |
+
+| Layer                         | Tech Stack                                         | Description                                            |
+| :---------------------------- | :------------------------------------------------- | :----------------------------------------------------- |
+| **Runtime & Framework** | Node.js + Express 5 + TypeScript                   | Non-blocking I/O web server                            |
+| **Execution Engine**    | `tsx`                                            | TypeScript execution and live watching                 |
+| **Database Driver**     | `mysql2`                                         | Promise-based MySQL connection pool driver             |
+| **Security & Auth**     | `jsonwebtoken`, `bcrypt`, `helmet`, `cors` | Token verification, password hashing, security headers |
+| **File Processing**     | `multer`                                         | Disk-storage handling for PDF uploads                  |
+| **PDF Manipulation**    | `pdf-lib`                                        | Server-side PDF modification & signature box stamping  |
+| **Validation**          | Zod                                                | Strict runtime request body and query validation       |
 
 ---
 
@@ -208,23 +212,27 @@ Electronic-Signature-Document-Management-System/
 ## ✨ Core Functional Features
 
 ### 1. Document Management & Server-Side Sorting
+
 - **PDF Upload**: Upload PDF files up to 5MB with automatic filename sanitization and page count calculation.
 - **Filter & Search**: Full-text search by document title or owner name, with status filtering (`Draft`, `In Progress`, `Completed`, `Archived`).
 - **Dynamic Sorting**: Server-side sorting on table column headers (`Document Name`, `Uploaded By`, `Status`, `Uploaded Date`, `File Size`, `Signers Count`) with `ASC`/`DESC` toggling.
 - **Download Options**: Download original unburned PDF (`?raw=true`) or fully compiled PDF with stamped signature fields.
 
 ### 2. Drag-and-Drop Visual PDF Signature Editor
+
 - Interactive multi-page PDF viewer powered by HTML5 canvas.
 - Drag-and-drop placement of signature boxes anywhere on any page.
 - Assign signature boxes to custom signer roles with visual color-coded badges.
 - Reposition, resize, configure required status, and save placement coordinates to backend in real time.
 
 ### 3. Signer Roles Management
+
 - Custom role creation (e.g. `Client / Buyer`, `Seller / Vendor`, `Legal Approver`, `Witness`).
 - Color badge assignment for visual separation in document editor.
 - Complete CRUD operations with client-side & server-side sorting.
 
 ### 4. Administrative User Management Portal
+
 - Separate administrative authentication flow (`/admin/login`).
 - Admin Dashboard displaying active users, total users, inactive users, and total documents.
 - User management table with pagination, full-text search, status filtering, column sorting, user creation, profile edits, password resets, and account deactivation.
@@ -257,6 +265,7 @@ The database structure and table relationships are documented in [DATABASE_SCHEM
 ## 🚀 Environment Setup & Installation Guide
 
 ### Prerequisites
+
 - **Node.js**: `v18.x` or higher
 - **npm**: `v9.x` or higher
 - **MySQL Database**: `v8.0` or higher
@@ -298,6 +307,7 @@ npm install
 # 3. Start development server with live reload
 npm run dev
 ```
+
 Backend HTTP server will start listening at **`http://localhost:8000`**.
 
 ---
@@ -314,6 +324,7 @@ npm install
 # 3. Start Vite development server
 npm run dev
 ```
+
 Frontend Web application will run at **`http://localhost:5173`**.
 
 ---

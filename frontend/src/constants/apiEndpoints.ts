@@ -8,11 +8,13 @@ export const ENDPOINTS = {
     DASHBOARD: "/admin/dashboard",
     USERS: "/admin/users",
     USER_BY_ID: (id: number) => `/admin/users/${id}`,
+    RESET_PASSWORD: "/admin/reset-password",
   },
   USER: {
     LOGIN: "/user/login",
     LOGOUT: "/user/logout",
     PROFILE: "/user/profile",
+    RESET_PASSWORD:"/user/reset-password",
   },
   SIGNER_ROLE: {
     BASE: "/signer-role/signer-roles",

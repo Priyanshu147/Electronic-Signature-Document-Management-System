@@ -29,6 +29,19 @@ export const catchError: ErrorRequestHandler = (
     return;
   }
 
+  // MySQL Foreign Key Constraint Error (Row is referenced)
+  if (
+    err.code === "ER_ROW_IS_REFERENCED_2" ||
+    err.code === "ER_ROW_IS_REFERENCED" ||
+    err.errno === 1451
+  ) {
+    res.status(409).json({
+      success: false,
+      message: "Cannot delete or update record because it is referenced by other items in the system.",
+    });
+    return;
+  }
+
   // Invalid JWT
   if (err.name === "JsonWebTokenError") {
     res.status(401).json({

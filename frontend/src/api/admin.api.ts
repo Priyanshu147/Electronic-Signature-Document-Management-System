@@ -62,7 +62,7 @@ export const adminApi = {
   },
 
   resetAdminPassword: async (oldPassword: string, newPassword: string) => {
-    const response = await api.post("/admin/reset-password", {
+    const response = await api.post(ENDPOINTS.ADMIN.RESET_PASSWORD, {
       oldPassword,
       newPassword,
     });
