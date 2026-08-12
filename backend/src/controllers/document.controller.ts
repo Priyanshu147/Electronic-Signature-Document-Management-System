@@ -198,48 +198,107 @@ const DocumentController = {
 
                     for (const field of fields) {
                         const pageIdx = field.page_number - 1;
-                        if (pageIdx >= 0 && pageIdx < pages.length) {
-                            const page = pages[pageIdx];
-                            const { width: pageW, height: pageH } = page.getSize();
 
-                            const boxW = Math.max((field.width / 100) * pageW, 100);
-                            const boxH = Math.max((field.height / 100) * pageH, 35);
-                            const pdfX = Math.max(0, (field.x_position / 100) * pageW);
-                            const pdfY = Math.max(0, pageH - ((field.y_position / 100) * pageH) - boxH);
-
-                            // Draw clean modern signature field background box
-                            page.drawRectangle({
-                                x: pdfX,
-                                y: pdfY,
-                                width: boxW,
-                                height: boxH,
-                                borderColor: rgb(0.1, 0.46, 0.82), // #1976D2 (Primary Blue)
-                                borderWidth: 1.5,
-                                color: rgb(0.93, 0.96, 1.0), // Light blue tint
-                                opacity: 0.85,
-                            });
-
-                            // Draw Signer Role title
-                            const text = `${field.role_name}`;
-                            const fontSize = Math.max(8, Math.min(12, boxH * 0.28));
-
-                            page.drawText(text, {
-                                x: pdfX + 8,
-                                y: pdfY + boxH - fontSize - 6,
-                                size: fontSize,
-                                font,
-                                color: rgb(0.06, 0.09, 0.16), // Slate dark
-                            });
-
-                            // Draw "Sign Here" label
-                            page.drawText("Sign Here", {
-                                x: pdfX + 8,
-                                y: pdfY + 6,
-                                size: Math.max(7, fontSize - 2),
-                                font,
-                                color: rgb(0.1, 0.46, 0.82), // Primary Blue
-                            });
+                        if (pageIdx < 0 || pageIdx >= pages.length) {
+                            continue;
                         }
+
+                        const page = pages[pageIdx];
+                        const { width: pageW, height: pageH } = page.getSize();
+
+                        const boxW = Math.max((field.width / 100) * pageW, 170);
+                        const boxH = Math.max((field.height / 100) * pageH, 65);
+
+                        const pdfX = Math.max(
+                            0,
+                            (field.x_position / 100) * pageW
+                        );
+
+                        const pdfY = Math.max(
+                            0,
+                            pageH -
+                            ((field.y_position / 100) * pageH) -
+                            boxH
+                        );
+
+                        const BLACK = rgb(0, 0, 0);
+                        const DARK = rgb(0.25, 0.25, 0.25);
+                        const LIGHT = rgb(0.55, 0.55, 0.55);
+
+                        // Outer border
+                        page.drawRectangle({
+                            x: pdfX,
+                            y: pdfY,
+                            width: boxW,
+                            height: boxH,
+                            borderColor: BLACK,
+                            borderWidth: 0.8,
+                        });
+
+                        // Title
+                        page.drawText("SIGNATURE", {
+                            x: pdfX + 8,
+                            y: pdfY + boxH - 14,
+                            size: 8,
+                            font,
+                            color: BLACK,
+                        });
+
+                        // Assigned signer
+                        page.drawText(`Signer: ${field.role_name}`, {
+                            x: pdfX + 8,
+                            y: pdfY + boxH - 28,
+                            size: 7,
+                            font,
+                            color: DARK,
+                        });
+
+                        // Signature line
+                        const lineY = pdfY + 18;
+
+                        page.drawLine({
+                            start: {
+                                x: pdfX + 8,
+                                y: lineY,
+                            },
+                            end: {
+                                x: pdfX + boxW - 8,
+                                y: lineY,
+                            },
+                            thickness: 0.8,
+                            color: BLACK,
+                        });
+
+                        // Caption
+                        page.drawText("Signature", {
+                            x: pdfX + 8,
+                            y: pdfY + 5,
+                            size: 6,
+                            font,
+                            color: LIGHT,
+                        });
+
+                        // Optional date line
+                        page.drawLine({
+                            start: {
+                                x: pdfX + boxW * 0.65,
+                                y: lineY,
+                            },
+                            end: {
+                                x: pdfX + boxW - 8,
+                                y: lineY,
+                            },
+                            thickness: 0.8,
+                            color: BLACK,
+                        });
+
+                        page.drawText("Date", {
+                            x: pdfX + boxW * 0.75,
+                            y: pdfY + 5,
+                            size: 6,
+                            font,
+                            color: LIGHT,
+                        });
                     }
 
                     const modifiedBytes = await pdfDoc.save();
