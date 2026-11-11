@@ -1,6 +1,6 @@
 # 📄 Electronic Signature Document Management System
 
-A full-stack, enterprise-grade **Electronic Signature & Document Management System** built with **React 18**, **TypeScript**, **Material-UI (MUI v5)**, **Node.js**, **Express 5**, and **MySQL**.
+A full-stack, enterprise-grade **Electronic Signature & Document Management System** built with **React 19**, **TypeScript**, **Material-UI (MUI v5)**, **Node.js**, **Express 5**, and **MySQL**.
 
 The platform empowers organizations to securely upload PDF documents, define custom signer roles (e.g. Buyer, Seller, Approver, Witness), visually drag-and-drop signature field placements onto PDF pages, automatically compile signed PDFs with embedded signature boxes using `pdf-lib`, and manage users via an administrative portal.
 
@@ -12,13 +12,13 @@ The platform empowers organizations to securely upload PDF documents, define cus
 
 The application follows a **Decoupled Client-Server Architecture**:
 
-- **Frontend SPA**: Vite + React 18 single-page application using TanStack React Query v5 for asynchronous state synchronization and optimistic UI updates.
+- **Frontend SPA**: Vite + React 19 single-page application using TanStack React Query v5 for asynchronous state synchronization and optimistic UI updates.
 - **Backend REST API**: Express 5 service structured in a 3-tier Layered Architecture (**Controllers -> Services -> Database Access / Utilities**).
 - **Database Layer**: Relational MySQL 8.x database utilizing connection pooling (`mysql2`) and transaction-safe operations.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│                                FRONTEND (React 18)                               │
+│                                FRONTEND (React 19)                               │
 │  ┌────────────────────┐   ┌──────────────────────────┐   ┌────────────────────┐  │
 │  │   Pages & Router   │───│  TanStack React Query    │───│   Axios Instance   │  │
 │  │ (Dashboard/Editor) │   │ (Zero-stale cache sync)  │   │  (JWT Interceptor) │  │
@@ -57,7 +57,7 @@ The application follows a **Decoupled Client-Server Architecture**:
 
 | Layer                           | Tech Stack                     | Description                                                        |
 | :------------------------------ | :----------------------------- | :----------------------------------------------------------------- |
-| **Framework**             | React 18 + TypeScript          | Component-driven UI architecture                                   |
+| **Framework**             | React 19 + TypeScript          | Component-driven UI architecture                                   |
 | **Build Tool**            | Vite                           | Lightning-fast module bundling & HMR                               |
 | **UI Component Library**  | Material-UI (MUI v5)           | Enterprise-grade styled components                                 |
 | **Data Fetching & Cache** | TanStack React Query v5        | Server state management & cache invalidation                       |
